@@ -7,7 +7,34 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
 </head>
 <body>
-    <h1>Это главная страница.</h1>
-    <img src="{% static 'img/camera_image.svg' %}" alt="Films" width="240" height="180">
+    <header>
+        <h1>Кинотеатр</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'home' %}">Главная</a></li>
+                <li><a href="">Фильмы</a></li>
+                <li><a href="">Личный кабинет</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <h2>Фильмы</h2>
+        <div class="movie-gallery">
+            {% for movie in movies %}
+            <div class="movie-card">
+                <img src="{% static 'img/camera_image.svg' %}" alt="{{ movie.name }}" width="24" height="18" class="movie-poster">
+                <h3>{{ movie.name }}</h3>
+                <p>Год: {{ movie.year }}</p>
+                <p>Рейтинг: {{ movie.score }}</p>
+                <p>Жанр: {{ movie.genre }}</p>
+                <a href="" class="btn">Подробнее</a>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Кинотеатр. Все права защищены.</p>
+    </footer>
 </body>
 </html>
