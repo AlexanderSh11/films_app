@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Registration</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+</head>
+<body>
+    <h2>Registrate new user</h2>
+    <form method="post">
+        {% csrf_token %}
+        <label for="{{ form.username.id_for_label }}">Username:</label>
+        {{ form.username }}
+        <label for="{{ form.password1.id_for_label }}">Password:</label>
+        {{ form.password1 }}
+        <label for="{{ form.password2.id_for_label }}">Retype password:</label>
+        {{ form.password2 }}
+        <button type="submit">Registrate</button>
+    </form>
+</body>
+</html>

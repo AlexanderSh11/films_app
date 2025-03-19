@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+    <title>Login</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+</head>
+<body>
+  <form method="post">
+    {% csrf_token %}
+    <label for="{{ form.username.id_for_label }}">Username:</label>
+    {{ form.username }}
+    <label for="{{ form.password.id_for_label }}">Password:</label>
+    {{ form.password }}
+    <button type="submit">Login</button>
+  </form>
+</body>
+</html>

@@ -1,7 +1,7 @@
 from django.db import models
 
 # Create your models here.
-class Movies(models.Model):
+class Movie(models.Model):
     name = models.TextField(primary_key=True)  # The composite primary key (name, year) found, that is not supported. The first column is selected.
     rating = models.TextField(blank=True, null=True)
     genre = models.TextField(blank=True, null=True)
@@ -24,3 +24,13 @@ class Movies(models.Model):
         unique_together = (('name', 'year'),)
     def __str__(self):
         return f"{self.name} {self.year}"
+
+class Favorite(models.Model):
+    user_id = models.IntegerField(primary_key=True)
+    movie_name = models.TextField()
+    movie_year = models.IntegerField()
+
+    class Meta:
+        managed = False
+        db_table = 'favorites'
+        unique_together = (('user_id', 'movie_name', 'movie_year'),)

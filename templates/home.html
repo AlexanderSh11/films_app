@@ -3,38 +3,52 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Главная страница</title>
+    <title>Home page</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
 </head>
 <body>
     <header>
-        <h1>Кинотеатр</h1>
+        <h1>Cinema</h1>
         <nav>
             <ul>
-                <li><a href="{% url 'home' %}">Главная</a></li>
-                <li><a href="">Фильмы</a></li>
-                <li><a href="">Личный кабинет</a></li>
+                <li><a href="{% url 'home' %}">Home page</a></li>
+                <li><a href="">Movies</a></li>
+                {% if user.is_authenticated %}
+                    <li><a href="">Profile: {{ user.username }}</a></li>
+                    <li>
+                        <form id="logout-form" method="post" action="{% url 'logout' %}" style="display: none;">
+                            {% csrf_token %}
+                        </form>
+                        <a href="#" onclick="document.getElementById('logout-form').submit()">Logout</a>
+                    </li>
+                {% else %}
+                    <li><a href="{% url 'login' %}">Login</a></li>
+                    <li><a href="{% url 'signup' %}">Sign up</a></li>
+                {% endif %}
             </ul>
         </nav>
     </header>
     <main>
-        <h2>Фильмы</h2>
+        <h2>Movies</h2>
         <div class="movie-gallery">
             {% for movie in movies %}
             <div class="movie-card">
                 <img src="{% static 'img/camera_image.svg' %}" alt="{{ movie.name }}" width="24" height="18" class="movie-poster">
-                <h3>{{ movie.name }}</h3>
-                <p>Год: {{ movie.year }}</p>
-                <p>Рейтинг: {{ movie.score }}</p>
-                <p>Жанр: {{ movie.genre }}</p>
-                <a href="" class="btn">Подробнее</a>
+                <h4>{{ movie.name }}</h4>
+                <p>Year: {{ movie.year }}</p>
+                <p>Score: {{ movie.score }}</p>
+                <p>Genre: {{ movie.genre }}</p>
+                <div class="rating-div" id="rating">
+                    <a href="" class="btn" style="background: #4caf50;">Like</a>
+                    <a href="" class="btn" style="background: #f44336;">Dislike</a>
+                </div>
             </div>
             {% endfor %}
         </div>
     </main>
 
     <footer>
-        <p>&copy; 2025 Кинотеатр. Все права защищены.</p>
+        <p>&copy; 2025 Cinema. All Rights Reserved.</p>
     </footer>
 </body>
 </html>

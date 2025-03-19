@@ -42,6 +42,18 @@ nav ul li a {
     padding: 15px;
     text-align: center;
     width: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.movie-card h4 {
+    height: 2em;
+    line-height: 1em;
+}
+
+.movie-card p {
+    margin: 5px;
 }
 
 .movie-poster {
@@ -49,10 +61,14 @@ nav ul li a {
     height: auto;
 }
 
+.rating-div {
+    display: flex;
+    justify-content: space-between;
+}
+
 .btn {
     display: inline-block;
     padding: 10px 15px;
-    background: #007bff;
     color: #fff;
     text-decoration: none;
     border-radius: 5px;
