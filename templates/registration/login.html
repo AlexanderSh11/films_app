@@ -4,16 +4,31 @@
 <head>
   <meta charset="UTF-8">
     <title>Login</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+    <link rel="stylesheet" href="{% static '/css/style.css' %}"/>
 </head>
 <body>
-  <form method="post">
-    {% csrf_token %}
-    <label for="{{ form.username.id_for_label }}">Username:</label>
-    {{ form.username }}
-    <label for="{{ form.password.id_for_label }}">Password:</label>
-    {{ form.password }}
-    <button type="submit">Login</button>
-  </form>
+    <header>
+        <h1>Cinema</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'home' %}">Home page</a></li>
+                <li><a href="{% url 'login' %}">Login</a></li>
+                <li><a href="{% url 'signup' %}">Sign up</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <form method="post">
+            {% csrf_token %}
+            <label for="{{ form.username.id_for_label }}">Username:</label>
+            {{ form.username }}
+            <label for="{{ form.password.id_for_label }}">Password:</label>
+            {{ form.password }}
+            <button type="submit">Login</button>
+        </form>
+    </main>
+    <footer>
+        <p>&copy; 2025 Cinema. All Rights Reserved.</p>
+    </footer>
 </body>
 </html>

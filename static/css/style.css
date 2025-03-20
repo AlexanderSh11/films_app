@@ -12,6 +12,12 @@ header {
     text-align: center;
 }
 
+main {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
 nav ul {
     list-style: none;
     padding: 0;
@@ -27,11 +33,35 @@ nav ul li a {
     text-decoration: none;
 }
 
+.filter-container {
+    border: 1px solid #f4f4f4;
+    padding: 5px;
+    display: flex;
+    justify-content: center;
+    border-radius: 5px;
+}
+
+.filter-container form {
+    display: flex;
+    flex-direction: row;
+}
+
+form label {
+    display: block;
+    margin-top: 10px;
+    margin-right: 10px;
+}
+
+form select {
+    margin-right: 460px;
+}
+
 .movie-gallery {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     margin: 20px;
+    margin-top: 0px;
 }
 
 .movie-card {
