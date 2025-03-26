@@ -1,3 +1,4 @@
+import requests
 from django.shortcuts import render
 from django.views.generic import TemplateView
 from .models import Movie
@@ -9,18 +10,21 @@ class HomePageView(TemplateView):
         request = self.request
         genre = request.GET.get('genre', 'All')
         sort = request.GET.get('sort', 'year')
+        movies = Movie.objects.all()
+        for movie in movies:
+            movie.genre_list = movie.genre.split(", ")
         if genre != 'All':
-            movies = Movie.objects.filter(genre=genre)
-        else:
-            movies = Movie.objects.all()
+            movies = Movie.objects.filter(genre__icontains=genre)
         if sort == 'title':
-            movies = movies.order_by('name', 'year')
-        elif sort == 'highest score':
-            movies = movies.filter(score__isnull=False).order_by('-score')
-        elif sort == 'lowest score':
-            movies = movies.filter(score__isnull=False).order_by('score')
-        elif sort == 'year':
-            movies = movies.order_by('year', 'name')
+            movies = movies.order_by('movie_name', 'year')
+        elif sort == 'highest rating':
+            movies = movies.filter(rating__isnull=False).order_by('-rating')
+        elif sort == 'lowest rating':
+            movies = movies.filter(rating__isnull=False).order_by('rating')
+        elif sort == 'newest':
+            movies = movies.order_by('-year', 'movie_name')
+        elif sort == 'oldest':
+            movies = movies.order_by('year', 'movie_name')
         context['selected_genre'] = genre
         context['selected_sort'] = sort
         context['movies'] = movies[:100]
