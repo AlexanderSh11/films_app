@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search page</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+</head>
+<body>
+    <header>
+        <h1>Cinema</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'home' %}">Home page</a></li>
+                <li><a href="{% url 'search' %}">Search</a></li>
+                {% if user.is_authenticated %}
+                    <li><a href="">Favorites</a></li>
+                    <li><a href="">Profile: {{ user.username }}</a></li>
+                    <li>
+                        <form id="logout-form" method="post" action="{% url 'logout' %}" style="display: none;">
+                            {% csrf_token %}
+                        </form>
+                        <a href="#" onclick="document.getElementById('logout-form').submit()">Logout</a>
+                    </li>
+                {% else %}
+                    <li><a href="{% url 'login' %}">Login</a></li>
+                    <li><a href="{% url 'signup' %}">Sign up</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <h2>Movies</h2>
+        <div class="filter-container">
+            <form method="get">
+                <label for="sort">Sort by: </label>
+                <select id="sort" name="sort">
+                    <option value="title">Title</option>
+                    <option value="highest score">Highest Score</option>
+                    <option value="lowest score">Lowest Score</option>
+                    <option value="newest">Year desc</option>
+                    <option value="oldest">Year asc</option>
+                </select>
+                <label for="genre">Genre: </label>
+                <select id="genre" name="genre">
+                    <option value="All">All</option>
+                    <option value="Action">Action</option>
+                    <option value="Adventure">Adventure</option>
+                    <option value="Animation">Animation</option>
+                    <option value="Biography">Biography</option>
+                    <option value="Comedy">Comedy</option>
+                    <option value="Crime">Crime</option>
+                    <option value="Drama">Drama</option>
+                    <option value="Family">Family</option>
+                    <option value="Fantasy">Fantasy</option>
+                    <option value="Film-Noir">Film-Noir</option>
+                    <option value="Horror">Horror</option>
+                    <option value="Music">Music</option>
+                    <option value="Musical">Musical</option>
+                    <option value="Mystery">Mystery</option>
+                    <option value="Romance">Romance</option>
+                    <option value="Sci-Fi">Sci-Fi</option>
+                    <option value="Sport">Sport</option>
+                    <option value="Thriller">Thriller</option>
+                    <option value="War">War</option>
+                    <option value="Western">Western</option>
+                </select>
+                <button type="submit">Filter</button>
+            </form>
+        </div>
+        <h5>Results: Sort={{ selected_sort }}, Genre={{ selected_genre }}</h5>
+        <div class="movie-gallery">
+            {% for movie in movies %}
+            <div class="movie-card">
+                <img src="{{ movie.poster_link }}" alt="{{ movie.movie_name }}" width="24" height="18" class="movie-poster">
+                <h4>{{ movie.movie_name }}</h4>
+                <p>Year: {{ movie.year }}</p>
+                <p>Rating: {{ movie.rating }}</p>
+                <p>Genre: {{ movie.genre }}</p>
+                <div class="rating-div" id="rating">
+                    <a href="" class="btn" style="background: #4caf50;">Like</a>
+                    <a href="" class="btn" style="background: #f44336;">Dislike</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Cinema. All Rights Reserved.</p>
+    </footer>
+</body>
+</html>

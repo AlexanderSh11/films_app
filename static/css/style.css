@@ -56,6 +56,17 @@ form select {
     margin-right: 460px;
 }
 
+.movie-scroll-container {
+    overflow-x: auto; /* Enable horizontal scrolling */
+    white-space: nowrap; /* Align items horizontally */
+    margin-bottom: 20px; /* Space between genres */
+}
+
+.movie-row {
+    display: inline-block; /* Display rows inline */
+    margin-right: 10px; /* Space between movies */
+}
+
 .movie-gallery {
     display: flex;
     flex-wrap: wrap;
@@ -72,9 +83,7 @@ form select {
     padding: 15px;
     text-align: center;
     width: 200px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
+    display: inline-block;
 }
 
 .movie-card h4 {
@@ -88,7 +97,7 @@ form select {
 
 .movie-poster {
     width: 100%;
-    height: auto;
+    height: 250px;
 }
 
 .rating-div {

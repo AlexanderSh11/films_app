@@ -3,8 +3,8 @@ from django.shortcuts import render
 from django.views.generic import TemplateView
 from .models import Movie
 # Create your views here.
-class HomePageView(TemplateView):
-    template_name = 'home.html'
+class SearchPageView(TemplateView):
+    template_name = 'search.html'
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         request = self.request
@@ -28,4 +28,22 @@ class HomePageView(TemplateView):
         context['selected_genre'] = genre
         context['selected_sort'] = sort
         context['movies'] = movies[:100]
+        return context
+
+class HomePageView(TemplateView):
+    template_name = 'home.html'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        request = self.request
+        movies_by_genre = {}
+
+        movies = Movie.objects.all()
+        for movie in movies:
+            movie_genres = movie.genre.split(", ")
+            for movie_genre in movie_genres:
+                if movie_genre not in movies_by_genre:
+                    movies_by_genre[movie_genre] = []
+                movies_by_genre[movie_genre].append(movie)
+
+        context['movies_by_genre'] = movies_by_genre
         return context
