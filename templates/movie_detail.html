@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Главная страница</title>
+    <title>О фильме</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
 </head>
 <body>
@@ -30,30 +30,32 @@
         </nav>
     </header>
     <main>
-        <h2>Фильмы</h2>
-        {% for genre, movies in movies_by_genre.items %}
-        <h2>{{ genre }}</h2>
-        <div class="movie-scroll-container">
-          <div class="movie-row">
-            {% for movie in movies %}
-                <div class="movie-card">
-                    <img src="{{ movie.poster_link }}" alt="{{ movie.movie_name }}" width="24" height="18" class="movie-poster">
-                    <h4>{{ movie.movie_name }}</h4>
-                    <p>Год: {{ movie.year }}</p>
-                    <p>Рейтинг: {{ movie.rating }}</p>
-                    <p class="long">Жанр: {{ movie.genre }}</p>
-                    <div class="rating-div" id="rating">
-                        <a href="{% url 'add_to_favorites' movie.id %}" class="btn" style="background: #4caf50;">В избранное</a>
-                        <a href="{% url 'movie_detail' movie.id %}" class="btn" style="background: #f44336;">Подробнее</a>
-                    </div>
-                </div>
-                {% if forloop.counter|divisibleby:2 and not forloop.last %}
-                    <div class="movie-row"></div>
+        <div class="movie-info">
+            <div class="movie-poster">
+                {% if movie.poster_link %}
+                    <img src="{{ movie.poster_link }}" alt="{{ movie.movie_name }}" class="movie-poster">
+                {% else %}
+                    <div class="no-poster">Нет постера</div>
                 {% endif %}
-            {% endfor %}
-          </div>
+            </div>
+        
+            <div class="movie-details">
+                <p><strong>Год:</strong> {{ movie.year }}</p>
+                <p><strong>Жанр:</strong> {{ movie.genre }}</p>
+                <p><strong>Режиссер:</strong> {{ movie.director }}</p>
+                <p><strong>Рейтинг:</strong> {{ movie.rating|default:"Нет оценки" }}</p>
+                <p><strong>Обзор:</strong> {{ movie.overview }}</p>
+            </div>
         </div>
-        {% endfor %}
+        <div class="btn-favorites">
+            {% if user.is_authenticated %}
+                {% if is_favorite %}
+                    <a href="{% url 'remove_from_favorites' movie.id %}" class="btn" style="background: #f44336;">Удалить из избранного</a>
+                {% else %}
+                    <a href="{% url 'add_to_favorites' movie.id %}" class="btn" style="background: #4caf50;">В избранное</a>
+                {% endif %}
+            {% endif %}
+        </div>
     </main>
 
     <footer>

@@ -11,20 +11,20 @@
         <h1>Cinema</h1>
         <nav>
             <ul>
-                <li><a href="{% url 'home' %}">Home page</a></li>
-                <li><a href="{% url 'login' %}">Login</a></li>
-                <li><a href="{% url 'signup' %}">Sign up</a></li>
+                <li><a href="{% url 'home' %}">Главная</a></li>
+                <li><a href="{% url 'login' %}">Авторизация</a></li>
+                <li><a href="{% url 'signup' %}">Регистрация</a></li>
             </ul>
         </nav>
     </header>
     <main>
         <form method="post">
             {% csrf_token %}
-            <label for="{{ form.username.id_for_label }}">Username:</label>
+            <label for="{{ form.username.id_for_label }}">Имя пользователя:</label>
             {{ form.username }}
-            <label for="{{ form.password.id_for_label }}">Password:</label>
+            <label for="{{ form.password.id_for_label }}">Пароль:</label>
             {{ form.password }}
-            <button type="submit">Login</button>
+            <button type="submit">Авторизоваться</button>
         </form>
     </main>
     <footer>

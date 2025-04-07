@@ -11,25 +11,25 @@
         <h1>Cinema</h1>
         <nav>
             <ul>
-                <li><a href="{% url 'home' %}">Home page</a></li>
-                <li><a href="{% url 'login' %}">Login</a></li>
-                <li><a href="{% url 'signup' %}">Sign up</a></li>
+                <li><a href="{% url 'home' %}">Главная</a></li>
+                <li><a href="{% url 'login' %}">Авторизация</a></li>
+                <li><a href="{% url 'signup' %}">Регистрация</a></li>
             </ul>
         </nav>
     </header>
     <main>
-        <h2>Registrate new user</h2>
+        <h2>Зарегистрироваться</h2>
         <form method="post">
             {% csrf_token %}
-            <label for="{{ form.username.id_for_label }}">Username:</label>
+            <label for="{{ form.username.id_for_label }}">Имя пользователя:</label>
             {{ form.username }}
             <label for="{{ form.email.id_for_label }}">Email:</label>
             {{ form.email }}
-            <label for="{{ form.password1.id_for_label }}">Password:</label>
+            <label for="{{ form.password1.id_for_label }}">Пароль:</label>
             {{ form.password1 }}
-            <label for="{{ form.password2.id_for_label }}">Retype password:</label>
+            <label for="{{ form.password2.id_for_label }}">Повторите пароль:</label>
             {{ form.password2 }}
-            <button type="submit">Registrate</button>
+            <button type="submit">Зарегистрироваться</button>
             {% if form.errors %}
                 <div class="errors">
                     <ul>

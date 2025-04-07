@@ -1,4 +1,6 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect, render
+from app.models import Favorite, Movie
+from django.contrib.auth.models import User
 from .forms import CustomUserCreationForm
 from django.contrib.auth.views import LogoutView as AuthLogoutView
 from django.urls import reverse_lazy
