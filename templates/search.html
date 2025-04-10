@@ -14,7 +14,7 @@
                 <li><a href="{% url 'home' %}">Главная</a></li>
                 <li><a href="{% url 'search' %}">Поиск</a></li>
                 {% if user.is_authenticated %}
-                    <li><a href="">Избранное</a></li>
+                    <li><a href="{% url 'favorites' user.id%}">Избранное</a></li>
                     <li><a href="">Профиль: {{ user.username }}</a></li>
                     <li>
                         <form id="logout-form" method="post" action="{% url 'logout' %}" style="display: none;">
@@ -78,8 +78,16 @@
                 <p>Рейтинг: {{ movie.rating }}</p>
                 <p class="long">Жанр: {{ movie.genre }}</p>
                 <div class="rating-div" id="rating">
-                    <a href="{% url 'add_to_favorites' movie.id %}" class="btn" style="background: #4caf50;">В избранное</a>
-                    <a href="{% url 'movie_detail' movie.id %}" class="btn" style="background: #f44336;">Подробнее</a>
+                    {% if user.is_authenticated %}
+                        {% if movie.id in user_favorites %}
+                            <a href="{% url 'remove_from_favorites' movie.id %}" class="btn" style="background: #f44336;">Удалить</a>
+                        {% else %}
+                            <a href="{% url 'add_to_favorites' movie.id %}" class="btn" style="background: #4caf50;">В избранное</a>
+                        {% endif %}
+                    {% else %}
+                        <a class="btn"></a>
+                    {% endif %}
+                    <a href="{% url 'movie_detail' movie.id %}" class="btn" style="background: #0000ff;">Подробнее</a>
                 </div>
             </div>
             {% endfor %}

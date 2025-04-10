@@ -1,5 +1,7 @@
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
+from django.urls import reverse
 import requests
 from django.views.generic import TemplateView
 from .models import Movie, Favorite
@@ -27,9 +29,15 @@ class SearchPageView(TemplateView):
             movies = movies.order_by('-year', 'movie_name')
         elif sort == 'oldest':
             movies = movies.order_by('year', 'movie_name')
+
+        user_favorites_ids = []
+        if request.user.is_authenticated:
+            user_favorites_ids = Favorite.objects.select_related('movie').filter(user_id=request.user.id).values_list('movie_id', flat=True)
+
         context['selected_genre'] = genre
         context['selected_sort'] = sort
         context['movies'] = movies[:100]
+        context['user_favorites'] = user_favorites_ids
         return context
 
 class HomePageView(TemplateView):
@@ -47,7 +55,12 @@ class HomePageView(TemplateView):
                     movies_by_genre[movie_genre] = []
                 movies_by_genre[movie_genre].append(movie)
 
+        user_favorites_ids = []
+        if request.user.is_authenticated:
+            user_favorites_ids = Favorite.objects.select_related('movie').filter(user_id=request.user.id).values_list('movie_id', flat=True)
+
         context['movies_by_genre'] = movies_by_genre
+        context['user_favorites'] = user_favorites_ids
         return context
     
 
@@ -59,13 +72,20 @@ def movie_detail(request, movie_id):
     return render(request, 'movie_detail.html', {'movie': movie, 'is_favorite': is_favorite})
 
 @login_required
+def favorites(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    favorites = Favorite.objects.select_related('movie').filter(user_id=user_id)
+    print(favorites.count())
+    return render(request, 'favorites.html', {'user': user, 'favorites': favorites})
+
+@login_required
 def add_to_favorites(request, movie_id):
     movie = get_object_or_404(Movie, id=movie_id)
     Favorite.objects.get_or_create(user=request.user, movie=movie)
-    return redirect('movie_detail', movie_id=movie_id)
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('home')))
 
 @login_required
 def remove_from_favorites(request, movie_id):
     movie = get_object_or_404(Movie, id=movie_id)
     Favorite.objects.filter(user=request.user, movie=movie).delete()
-    return redirect('movie_detail', movie_id=movie_id)
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('home')))

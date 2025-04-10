@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Избранное</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+</head>
+<body>
+    <header>
+        <h1>Cinema</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'home' %}">Главная</a></li>
+                <li><a href="{% url 'search' %}">Поиск</a></li>
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'favorites' user.id%}">Избранное</a></li>
+                    <li><a href="">Профиль: {{ user.username }}</a></li>
+                    <li>
+                        <form id="logout-form" method="post" action="{% url 'logout' %}" style="display: none;">
+                            {% csrf_token %}
+                        </form>
+                        <a href="#" onclick="document.getElementById('logout-form').submit()">Выход из аккаунта</a>
+                    </li>
+                {% else %}
+                    <li><a href="{% url 'login' %}">Авторизация</a></li>
+                    <li><a href="{% url 'signup' %}">Регистрация</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <div class="movie-gallery">
+            {% for favorite in favorites %}
+            <div class="movie-card">
+                <img src="{{ favorite.movie.poster_link }}" alt="{{ favorite.movie.movie_name }}" width="24" height="18" class="movie-poster">
+                <h4>{{ favorite.movie.movie_name }}</h4>
+                <p>Год: {{ favorite.movie.year }}</p>
+                <p>Рейтинг: {{ favorite.movie.rating }}</p>
+                <p class="long">Жанр: {{ favorite.movie.genre }}</p>
+                <div class="rating-div" id="rating">
+                    <a href="{% url 'remove_from_favorites' favorite.movie.id %}" class="btn" style="background: #f44336;">Удалить</a>
+                    <a href="{% url 'movie_detail' favorite.movie.id %}" class="btn" style="background: #0000ff;">Подробнее</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Cinema. All Rights Reserved.</p>
+    </footer>
+</body>
+</html>
