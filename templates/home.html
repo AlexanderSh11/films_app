@@ -31,6 +31,31 @@
     </header>
     <main>
         <h2>Фильмы</h2>
+        {% if show_recommendations %}
+            <h2 class="recommendations-title">Топ-10 фильмов для Вас</h2>
+            <div class="movie-scroll-container">
+                <div class="movie-row">
+                    {% for movie in recommendations %}
+                    <div class="movie-card">
+                        <img src="{{ movie.poster_link }}" alt="{{ movie.movie_name }}" width="24" height="18" class="movie-poster">
+                        <h4>{{ movie.movie_name }}</h4>
+                        <p>Год: {{ movie.year }}</p>
+                        <p class="long2">Режиссер: {{ movie.director }}</p>
+                        <p>Рейтинг: {{ movie.rating }}</p>
+                        <p class="long3">Жанр: {{ movie.genre }}</p>
+                        <div class="rating-div">
+                            {% if movie.id in user_favorites %}
+                                <a href="{% url 'remove_from_favorites' movie.id %}" class="btn" style="background: #f44336;">Удалить</a>
+                            {% else %}
+                                <a href="{% url 'add_to_favorites' movie.id %}" class="btn" style="background: #4caf50;">В избранное</a>
+                            {% endif %}
+                            <a href="{% url 'movie_detail' movie.id %}" class="btn" style="background: #0000ff;">Подробнее</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
         {% for genre, movies in movies_by_genre.items %}
         <h2>{{ genre }}</h2>
         <div class="movie-scroll-container">
@@ -40,8 +65,9 @@
                     <img src="{{ movie.poster_link }}" alt="{{ movie.movie_name }}" width="24" height="18" class="movie-poster">
                     <h4>{{ movie.movie_name }}</h4>
                     <p>Год: {{ movie.year }}</p>
+                    <p class="long2">Режиссер: {{ movie.director }}</p>
                     <p>Рейтинг: {{ movie.rating }}</p>
-                    <p class="long">Жанр: {{ movie.genre }}</p>
+                    <p class="long3">Жанр: {{ movie.genre }}</p>
                     <div class="rating-div" id="rating">
                         {% if user.is_authenticated %}
                             {% if movie.id in user_favorites %}
@@ -50,7 +76,7 @@
                                 <a href="{% url 'add_to_favorites' movie.id %}" class="btn" style="background: #4caf50;">В избранное</a>
                             {% endif %}
                         {% else %}
-                            <a class="btn"></a>
+                            <a href="{% url 'login' %}" class="btn" style="background: #808080;">Авторизация</a>
                         {% endif %}
                         <a href="{% url 'movie_detail' movie.id %}" class="btn" style="background: #0000ff;">Подробнее</a>
                     </div>

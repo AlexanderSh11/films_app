@@ -49,16 +49,16 @@
                     <option value="Анимация">анимация</option>
                     <option value="Биография">биография</option>
                     <option value="Комедия">комедия</option>
-                    <option value="Преступление">преступление</option>
+                    <option value="Криминал">криминал</option>
                     <option value="Драма">драма</option>
                     <option value="Семейный">семейный</option>
                     <option value="Фэнтези">фэнтези</option>
                     <option value="Фильм-нуар">фильм-нуар</option>
                     <option value="Хоррор">хоррор</option>
                     <option value="Музыка">музыка</option>
-                    <option value="Музыкальный">музыкальный</option>
+                    <option value="Мюзикл">мюзикл</option>
                     <option value="Мистика">мистика</option>
-                    <option value="Романтика">романтика</option>
+                    <option value="Мелодрама">мелодрама</option>
                     <option value="Фантастика">фантастика</option>
                     <option value="Спорт">спорт</option>
                     <option value="Триллер">триллер</option>
@@ -75,8 +75,9 @@
                 <img src="{{ movie.poster_link }}" alt="{{ movie.movie_name }}" width="24" height="18" class="movie-poster">
                 <h4>{{ movie.movie_name }}</h4>
                 <p>Год: {{ movie.year }}</p>
+                <p class="long2">Режиссер: {{ movie.director }}</p>
                 <p>Рейтинг: {{ movie.rating }}</p>
-                <p class="long">Жанр: {{ movie.genre }}</p>
+                <p class="long3">Жанр: {{ movie.genre }}</p>
                 <div class="rating-div" id="rating">
                     {% if user.is_authenticated %}
                         {% if movie.id in user_favorites %}

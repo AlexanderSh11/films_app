@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 import requests
 from django.views.generic import TemplateView
+
+from recommendations import MovieRecommender
 from .models import Movie, Favorite
 from django.contrib.auth.models import User
 # Create your views here.
@@ -58,9 +60,15 @@ class HomePageView(TemplateView):
         user_favorites_ids = []
         if request.user.is_authenticated:
             user_favorites_ids = Favorite.objects.select_related('movie').filter(user_id=request.user.id).values_list('movie_id', flat=True)
-
+               
+            recommender = MovieRecommender(request.user)
+            recommendations = recommender.recommend_movies(10)
+        else:
+            recommendations = []
         context['movies_by_genre'] = movies_by_genre
         context['user_favorites'] = user_favorites_ids
+        context['recommendations'] = recommendations
+        context['show_recommendations'] = recommendations
         return context
     
 

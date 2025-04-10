@@ -75,6 +75,14 @@ form select {
     margin-top: 0px;
 }
 
+.info-favs {
+    margin: 10px;
+    padding: 15px;
+    text-align: center;
+    width: 80%;
+    display: inline-block;
+}
+
 .movie-card {
     background: #fff;
     border: 1px solid #ddd;
@@ -88,6 +96,9 @@ form select {
 
 .movie-card h4 {
     height: 1em;
+    word-wrap: break-word;    /* Перенос длинных слов */
+    overflow-wrap: break-word; /* Современный аналог word-wrap */
+    white-space: normal;      /* Стандартное поведение переноса */
     line-height: 1em;
 }
 
@@ -97,12 +108,15 @@ form select {
     white-space: normal;      /* Стандартное поведение переноса */
     margin: 5px;
 }
-.movie-card .long {
+.movie-card .long2 {
+    min-height: calc(2 * 1em);
+}
+.movie-card .long3 {
     min-height: calc(3 * 1.5em); /* 3 строки с учётом line-height */
 }
 .movie-poster {
     width: 100%;
-    height: auto;
+    height: 370px;
 }
 
 .rating-div {
