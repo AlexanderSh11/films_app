@@ -35,3 +35,18 @@ class Favorite(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.movie.movie_name} ({self.movie.year})"
+    
+class MovieRating(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    user_rating = models.PositiveIntegerField(blank=True, null=True, choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5'),])
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        managed = True
+        db_table = 'rating'
+        unique_together = (('user', 'movie'),)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.movie.movie_name} ({self.movie.year}): {self.user_rating}"

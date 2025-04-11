@@ -1,6 +1,12 @@
+from sklearn.neighbors import NearestNeighbors
+from sklearn.decomposition import NMF
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
+import numpy as np
+import pandas as pd
 from collections import Counter
 from django.core.cache import cache
-from app.models import Movie, Favorite
+from app.models import Movie, Favorite, MovieRating
 
 class MovieRecommender:
     def __init__(self, user):
@@ -11,7 +17,7 @@ class MovieRecommender:
 
         favorites_count = Favorite.objects.filter(user=self.user).count()
         if favorites_count < 5:  # минимум 5 фильмов для анализа
-            return None
+            return None, None
 
         favorites = Favorite.objects.filter(user=self.user).select_related('movie')
         
@@ -46,6 +52,7 @@ class MovieRecommender:
             # преобразуем в словарь, сортируем по убыванию популярности
             for director, count in director_counter.most_common():
                 director_prefs[director] = count/total
+
         return genre_prefs, director_prefs
     
     # возвращает n число рекомендованных фильмов
@@ -57,7 +64,7 @@ class MovieRecommender:
 
         genre_prefs, director_prefs = self.get_user_preferences()
         
-        if not genre_prefs and not director_prefs:
+        if genre_prefs==None or director_prefs==None:
             return []
         
         # получаем все фильмы, которые пользователь еще не добавлял в избранное

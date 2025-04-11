@@ -1,12 +1,13 @@
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 import requests
 from django.views.generic import TemplateView
 
+from app.forms import RatingForm
 from recommendations import MovieRecommender
-from .models import Movie, Favorite
+from .models import Movie, Favorite, MovieRating
 from django.contrib.auth.models import User
 # Create your views here.
 class SearchPageView(TemplateView):
@@ -76,8 +77,15 @@ def movie_detail(request, movie_id):
     movie = get_object_or_404(Movie, id=movie_id)
     is_favorite = False
     if request.user.is_authenticated:
-        is_favorite = Favorite.objects.filter(user=request.user, movie=movie).exists()
-    return render(request, 'movie_detail.html', {'movie': movie, 'is_favorite': is_favorite})
+        fav = Favorite.objects.filter(user=request.user, movie=movie)
+        is_favorite = fav.exists()
+        user_rating = None
+        rate = MovieRating.objects.filter(user=request.user, movie=movie)
+        if rate.exists():
+            user_rating = rate[0].user_rating
+        if user_rating == None:
+            user_rating = 'Нет оценки'
+    return render(request, 'movie_detail.html', {'movie': movie, 'is_favorite': is_favorite, 'user_rating': user_rating})
 
 @login_required
 def favorites(request, user_id):
@@ -97,3 +105,23 @@ def remove_from_favorites(request, movie_id):
     movie = get_object_or_404(Movie, id=movie_id)
     Favorite.objects.filter(user=request.user, movie=movie).delete()
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('home')))
+
+@login_required
+def rate_movie(request, movie_id):
+    movie = get_object_or_404(Movie, pk=movie_id)
+    
+    # Получаем или создаем запись в избранном
+    rating, created = MovieRating.objects.get_or_create(
+        user=request.user,
+        movie=movie
+    )
+    
+    if request.method == 'POST':
+        form = RatingForm(request.POST, instance=rating)
+        if form.is_valid():
+            form.save()
+            return redirect('movie_detail', movie_id=movie.id)
+    else:
+        form = RatingForm(instance=rating)
+    
+    return redirect('movie_detail', movie_id=movie.id)
