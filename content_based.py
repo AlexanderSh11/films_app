@@ -1,11 +1,6 @@
-from sklearn.neighbors import NearestNeighbors
-from sklearn.decomposition import NMF
-from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import train_test_split
-import numpy as np
-import pandas as pd
 from collections import Counter
 from django.core.cache import cache
+from django.db.models import Avg
 from app.models import Movie, Favorite, MovieRating
 
 class MovieRecommender:
@@ -14,44 +9,61 @@ class MovieRecommender:
     
     # получить предпочтения пользователя в жанрах и режиссерах
     def get_user_preferences(self):
-
-        favorites_count = Favorite.objects.filter(user=self.user).count()
-        if favorites_count < 5:  # минимум 5 фильмов для анализа
-            return None, None
-
+        # все оценки пользователя
+        user_ratings = MovieRating.objects.filter(user=self.user).select_related('movie')
+        # все избранные фильмы пользователя
         favorites = Favorite.objects.filter(user=self.user).select_related('movie')
+        if user_ratings.count() + favorites.count() < 10:  # минимум 10 избранных/оцененных фильмов для анализа
+            return None, None
         
-        # получаем все жанры из избранных фильмов
-        all_genres = []
-        all_directors = []
-        for fav in favorites:
-            if fav.movie.genre:
-                genres = [g.strip().lower() for g in fav.movie.genre.split(',')]
-                all_genres.extend(genres)
+        # получаем все жанры и всех режиссеров из избранных фильмов и взвешиваем их
+        genre_weights = Counter()
+        director_weights = Counter()
+        total_weight = 0
 
-            if fav.movie.director:
-                directors = [d.strip().lower() for d in fav.movie.director.split(',')]
-                all_directors.extend(directors)
+        # обрабатываем оценки (1-5)
+        for rating in user_ratings:
+            weight = rating.user_rating  # Вес = оценка (1-5)
+            movie = rating.movie
+            
+            if movie.genre:
+                genres = [g.strip().lower() for g in movie.genre.split(',')]
+                for genre in genres:
+                    genre_weights[genre] += weight
+            
+            if movie.director:
+                directors = [d.strip().lower() for d in movie.director.split(',')]
+                for director in directors:
+                    director_weights[director] += weight
+            
+            total_weight += weight
+
+        # обрабатываем избранное (вес = средняя оценка пользователя или 3)
+        avg_rating = user_ratings.aggregate(Avg('user_rating'))['user_rating__avg'] or 3
+        for fav in Favorite.objects.filter(user=self.user).select_related('movie'):
+            movie = fav.movie
+            
+            if movie.genre:
+                genres = [g.strip().lower() for g in movie.genre.split(',')]
+                for genre in genres:
+                    genre_weights[genre] += avg_rating
+            
+            if movie.director:
+                directors = [d.strip().lower() for d in movie.director.split(',')]
+                for director in directors:
+                    director_weights[director] += avg_rating
+            
+            total_weight += avg_rating
         
-        # нормализация жанров
+        # нормализация весов жанров
         genre_prefs = {}
-        if all_genres:
-            # подсчитываем частоту жанров
-            genre_counter = Counter(all_genres)
-            total = len(all_genres)
-            # преобразуем в словарь, сортируем по убыванию популярности
-            for genre, count in genre_counter.most_common():
-                genre_prefs[genre] = count/total
+        for genre, weight in genre_weights.items():
+            genre_prefs[genre] = weight / total_weight
     
-        # нормализация режиссёров
+        # нормализация весов режиссёров
         director_prefs = {}
-        if all_directors:
-            # подсчитываем частоту режиссеров
-            director_counter = Counter(all_directors)
-            total = len(all_directors)
-            # преобразуем в словарь, сортируем по убыванию популярности
-            for director, count in director_counter.most_common():
-                director_prefs[director] = count/total
+        for director, weight in director_weights.items():
+            director_prefs[director] = weight / total_weight
 
         return genre_prefs, director_prefs
     
@@ -100,7 +112,8 @@ class MovieRecommender:
         
         # сортируем по убыванию оценки
         scored_movies.sort(key=lambda x: x[1], reverse=True)
+        
         # возвращаем топ-N фильмов
         recommendations = [movie for movie, score in scored_movies[:n]]
-        cache.set(cache_key, recommendations, timeout=300)
+        cache.set(cache_key, recommendations, timeout=3)
         return recommendations

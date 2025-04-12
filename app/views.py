@@ -6,7 +6,7 @@ import requests
 from django.views.generic import TemplateView
 
 from app.forms import RatingForm
-from recommendations import MovieRecommender
+from content_based import MovieRecommender
 from .models import Movie, Favorite, MovieRating
 from django.contrib.auth.models import User
 # Create your views here.
