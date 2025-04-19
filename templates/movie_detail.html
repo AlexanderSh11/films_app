@@ -15,7 +15,7 @@
                 <li><a href="{% url 'search' %}">Поиск</a></li>
                 {% if user.is_authenticated %}
                     <li><a href="{% url 'favorites' user.id %}">Избранное</a></li>
-                    <li><a href="">Профиль: {{ user.username }}</a></li>
+                    <li><a href="{% url 'profile' user.id%}">Профиль: {{ user.username }}</a></li>
                     <li>
                         <form id="logout-form" method="post" action="{% url 'logout' %}" style="display: none;">
                             {% csrf_token %}

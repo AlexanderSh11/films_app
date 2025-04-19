@@ -91,7 +91,6 @@ def movie_detail(request, movie_id):
 def favorites(request, user_id):
     user = get_object_or_404(User, id=user_id)
     favorites = Favorite.objects.select_related('movie').filter(user_id=user_id)
-    print(favorites.count())
     return render(request, 'favorites.html', {'user': user, 'favorites': favorites})
 
 @login_required
