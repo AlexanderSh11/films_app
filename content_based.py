@@ -15,7 +15,10 @@ class MovieRecommender:
         favorites = Favorite.objects.filter(user=self.user).select_related('movie')
         if user_ratings.count() + favorites.count() < 10:  # минимум 10 избранных/оцененных фильмов для анализа
             return None, None
-        
+        #print("Оценки пользователя:\n", user_ratings, sep="")
+        #print()
+        #print("Избранное пользователя:\n", favorites, sep="")
+        #print()
         # получаем все жанры и всех режиссеров из избранных фильмов и взвешиваем их
         genre_weights = Counter()
         director_weights = Counter()
@@ -23,7 +26,7 @@ class MovieRecommender:
 
         # обрабатываем оценки (1-5)
         for rating in user_ratings:
-            weight = rating.user_rating  # Вес = оценка (1-5)
+            weight = rating.user_rating  # Вес = оценка
             movie = rating.movie
             
             if movie.genre:
@@ -39,21 +42,21 @@ class MovieRecommender:
             total_weight += weight
 
         # обрабатываем избранное (вес = средняя оценка пользователя или 3)
-        avg_rating = user_ratings.aggregate(Avg('user_rating'))['user_rating__avg'] or 3
+        weight = user_ratings.aggregate(Avg('user_rating'))['user_rating__avg'] or 3
         for fav in Favorite.objects.filter(user=self.user).select_related('movie'):
             movie = fav.movie
             
             if movie.genre:
                 genres = [g.strip().lower() for g in movie.genre.split(',')]
                 for genre in genres:
-                    genre_weights[genre] += avg_rating
+                    genre_weights[genre] += weight
             
             if movie.director:
                 directors = [d.strip().lower() for d in movie.director.split(',')]
                 for director in directors:
-                    director_weights[director] += avg_rating
+                    director_weights[director] += weight
             
-            total_weight += avg_rating
+            total_weight += weight
         
         # нормализация весов жанров
         genre_prefs = {}
@@ -75,7 +78,10 @@ class MovieRecommender:
             return cached
 
         genre_prefs, director_prefs = self.get_user_preferences()
-        
+        #print("Веса жанров:\n", genre_prefs, sep="")
+        #print()
+        #print("Веса режиссеров:\n", director_prefs, sep="")
+        #print()
         if genre_prefs==None or director_prefs==None:
             return []
         
@@ -112,7 +118,9 @@ class MovieRecommender:
         
         # сортируем по убыванию оценки
         scored_movies.sort(key=lambda x: x[1], reverse=True)
-        
+        #print("Фильмы с оценками score:")
+        #for movie in scored_movies:
+        #    print(movie)
         # возвращаем топ-N фильмов
         recommendations = [movie for movie, score in scored_movies[:n]]
         cache.set(cache_key, recommendations, timeout=3)

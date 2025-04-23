@@ -22,15 +22,15 @@ class SearchPageView(TemplateView):
             movie.genre_list = movie.genre.split(", ")
         if genre != 'Все':
             movies = Movie.objects.filter(genre__icontains=genre)
-        if sort == 'title':
+        if sort == 'названию':
             movies = movies.order_by('movie_name', 'year')
-        elif sort == 'highest rating':
+        elif sort == 'рейтингу (сначала лучшие)':
             movies = movies.filter(rating__isnull=False).order_by('-rating')
-        elif sort == 'lowest rating':
+        elif sort == 'рейтингу (сначала худшие)':
             movies = movies.filter(rating__isnull=False).order_by('rating')
-        elif sort == 'newest':
+        elif sort == 'году выхода (сначала новые)':
             movies = movies.order_by('-year', 'movie_name')
-        elif sort == 'oldest':
+        elif sort == 'году выхода (сначала старые)':
             movies = movies.order_by('year', 'movie_name')
 
         user_favorites_ids = []
@@ -76,15 +76,13 @@ class HomePageView(TemplateView):
 def movie_detail(request, movie_id):
     movie = get_object_or_404(Movie, id=movie_id)
     is_favorite = False
+    user_rating = 'Нет оценки'
     if request.user.is_authenticated:
         fav = Favorite.objects.filter(user=request.user, movie=movie)
         is_favorite = fav.exists()
-        user_rating = None
         rate = MovieRating.objects.filter(user=request.user, movie=movie)
         if rate.exists():
             user_rating = rate[0].user_rating
-        if user_rating == None:
-            user_rating = 'Нет оценки'
     return render(request, 'movie_detail.html', {'movie': movie, 'is_favorite': is_favorite, 'user_rating': user_rating})
 
 @login_required

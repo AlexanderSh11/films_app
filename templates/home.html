@@ -76,7 +76,7 @@
                                 <a href="{% url 'add_to_favorites' movie.id %}" class="btn" style="background: #4caf50;">В избранное</a>
                             {% endif %}
                         {% else %}
-                            <a href="{% url 'login' %}" class="btn" style="background: #808080;">Авторизация</a>
+                            <a class="btn"></a>
                         {% endif %}
                         <a href="{% url 'movie_detail' movie.id %}" class="btn" style="background: #0000ff;">Подробнее</a>
                     </div>
