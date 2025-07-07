@@ -1,57 +1,76 @@
 <!DOCTYPE html>
 {% load static %}
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Избранное</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мои фильмы - KinoMore</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/favorites.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/movie-card.css' %}"/>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <header>
-        <h1>Cinema</h1>
-        <nav>
-            <ul>
-                <li><a href="{% url 'home' %}">Главная</a></li>
-                <li><a href="{% url 'search' %}">Поиск</a></li>
-                <li><a href="{% url 'favorites' user.id%}">Избранное</a></li>
-                <li><a href="{% url 'profile' user.id%}">Профиль: {{ user.username }}</a></li>
-                <li>
-                    <form id="logout-form" method="post" action="{% url 'logout' %}" style="display: none;">
-                        {% csrf_token %}
-                    </form>
-                    <a href="#" onclick="document.getElementById('logout-form').submit()">Выход из аккаунта</a>
-                </li>
-            </ul>
-        </nav>
-    </header>
-    <main>
-        <div class="movie-gallery">
+    {% include "header.html" %}
+
+    <main class="main-content">
+        <section class="favorites-section">
+            <div class="section-header">
+                <h2 class="section-title">Мои избранные фильмы <span class="highlight">❤</span></h2>
+                <p class="section-subtitle">Все фильмы, которые вы сохранили</p>
+            </div>
+
             {% if favorites|length == 0 %}
-                <div class="info-favs">
-                    <h3>Вы еще не добавляли фильмы в избранное. Давайте найдем что-то интересное:</h3>
-                    <a href="{% url 'search'%}" class="btn" style="background: #0000ff;">Найти фильмы</a>
+                <div class="empty-favorites">
+                    <div class="empty-icon">
+                        <svg width="64" height="64" viewBox="0 0 24 24">
+                            <path fill="var(--accent-color)" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                    </div>
+                    <h3>Ваша коллекция избранных фильмов пуста</h3>
+                    <p>Находите интересные фильмы и добавляйте их сюда, чтобы не потерять</p>
+                    <a href="{% url 'search'%}" class="discover-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" style="margin-right: 8px;">
+                            <path fill="currentColor" d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                        </svg>
+                        Найти фильмы
+                    </a>
                 </div>
             {% else %}
-                {% for favorite in favorites %}
-                <div class="movie-card">
-                    <img src="{{ favorite.movie.poster_link }}" alt="{{ favorite.movie.movie_name }}" width="24" height="18" class="movie-poster">
-                    <h4>{{ favorite.movie.movie_name }}</h4>
-                    <p>Год: {{ favorite.movie.year }}</p>
-                    <p class="long2">Режиссер: {{ favorite.movie.director }}</p>
-                    <p>Рейтинг: {{ favorite.movie.rating }}</p>
-                    <p class="long3">Жанр: {{ favorite.movie.genre }}</p>
-                    <div class="rating-div" id="rating">
-                        <a href="{% url 'remove_from_favorites' favorite.movie.id %}" class="btn" style="background: #f44336;">Удалить</a>
-                        <a href="{% url 'movie_detail' favorite.movie.id %}" class="btn" style="background: #0000ff;">Подробнее</a>
+                <div class="favorites-grid">
+                    {% for favorite in favorites %}
+                    <div class="movie-card">
+                        <div class="movie-poster-container">
+                            <img src="{{ favorite.movie.poster_link }}" alt="{{ favorite.movie.movie_name }}" class="movie-poster">
+                            <div class="movie-rating">{{ favorite.movie.rating }}</div>
+                            <div class="favorite-badge">
+                                <svg width="24" height="24" viewBox="0 0 24 24">
+                                    <path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="movie-info">
+                            <h3 class="movie-title">{{ favorite.movie.movie_name }}</h3>
+                            <p class="movie-meta">{{ favorite.movie.year }} • {{ favorite.movie.country }}</p>
+                            <p class="movie-meta">{{ movie.genre }}</p>
+                            <p class="movie-director">Режиссер: {{ favorite.movie.director }}</p>
+                            <div class="movie-actions">
+                                <a href="{% url 'remove_from_favorites' favorite.movie.id %}" class="action-btn remove-btn">
+                                    <svg width="16" height="16" viewBox="0 0 24 24">
+                                        <path fill="currentColor" d="M19 13H5v-2h14v2z"/>
+                                    </svg>
+                                    Удалить
+                                </a>
+                                <a href="{% url 'movie_detail' favorite.movie.id %}" class="action-btn details-btn">Подробнее</a>
+                            </div>
+                        </div>
                     </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             {% endif %}
-        </div>
+        </section>
     </main>
 
-    <footer>
-        <p>&copy; 2025 Cinema. All Rights Reserved.</p>
-    </footer>
+    {% include "footer.html" %}
 </body>
 </html>

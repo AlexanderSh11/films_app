@@ -3,33 +3,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Профиль</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+    <title>Мой профиль - KinoMore</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}"/>
 </head>
 <body>
-    <header>
-        <h1>Cinema</h1>
-        <nav>
-            <ul>
-                <li><a href="{% url 'home' %}">Главная</a></li>
-                <li><a href="{% url 'search' %}">Поиск</a></li>
-                <li><a href="{% url 'favorites' user.id%}">Избранное</a></li>
-                <li><a href="">Профиль: {{ user.username }}</a></li>
-                <li>
-                    <form id="logout-form" method="post" action="{% url 'logout' %}" style="display: none;">
-                        {% csrf_token %}
-                    </form>
-                    <a href="#" onclick="document.getElementById('logout-form').submit()">Выход из аккаунта</a>
-                </li>
-            </ul>
-        </nav>
-    </header>
-    <main>
+    {% include "header.html" %}
+    <main class="auth-main">
         <h2>Профиль: {{ user.username }}</h2>
         <p>Email: {{ user.email }}</p>
     </main>
-    <footer>
-        <p>&copy; 2025 Cinema. All Rights Reserved.</p>
-    </footer>
+    {% include "footer.html" %}
 </body>
 </html>

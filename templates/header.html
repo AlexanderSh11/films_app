@@ -1,0 +1,34 @@
+<header class="main-header">
+        <div class="header-container">
+            <div class="logo-container">
+                <h1 class="logo">KINO<span class="logo-highlight">MORE</span></h1>
+                <p class="logo-subtitle">Ваш гид в мире кино</p>
+            </div>
+            <nav class="main-nav">
+                <ul class="nav-list">
+                    <li class="nav-item"><a href="{% url 'home' %}" class="nav-link active">Главная</a></li>
+                    <li class="nav-item"><a href="{% url 'search' %}" class="nav-link">Поиск</a></li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item"><a href="{% url 'favorites' user.id%}" class="nav-link">Избранное</a></li>
+                        <li class="nav-item user-profile">
+                            <a href="{% url 'profile' user.id%}" class="nav-link">
+                                <span class="username">{{ user.username }}</span>
+                                <svg class="profile-icon" width="24" height="100%" viewBox="0 0 24 24">
+                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                </svg>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <form id="logout-form" method="post" action="{% url 'logout' %}" style="display: none;">
+                                {% csrf_token %}
+                            </form>
+                            <a href="#" onclick="document.getElementById('logout-form').submit()" class="nav-link logout-link">Выйти</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item"><a href="{% url 'login' %}" class="nav-link">Войти</a></li>
+                        <li class="nav-item"><a href="{% url 'signup' %}" class="nav-link">Регистрация</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>

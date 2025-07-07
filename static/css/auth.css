@@ -1,0 +1,31 @@
+.auth-main {
+    margin: 2rem;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-form input {
+    margin: 0.5rem 0;
+    width: 20rem;
+}
+
+.auth-btn {
+    background-color: #176abd;
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 0.5rem;
+    width: 15rem;
+}
+
+.auth-btn:hover {
+    background-color: #1976d2;
+}

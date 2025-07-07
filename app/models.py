@@ -14,6 +14,7 @@ class Movie(models.Model):
     overview = models.TextField(blank=True, null=True)
     meta_score = models.IntegerField(blank=True, null=True)
     director = models.TextField(blank=True, null=True)
+    country = models.TextField(blank=True, null=True)
 
     class Meta:
         managed = True

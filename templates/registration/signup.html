@@ -3,23 +3,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Registration</title>
-    <link rel="stylesheet" href="{% static '/css/style.css' %}"/>
+    <title>Регистрация - KinoMore</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}"/>
 </head>
 <body>
-    <header>
-        <h1>Cinema</h1>
-        <nav>
-            <ul>
-                <li><a href="{% url 'home' %}">Главная</a></li>
-                <li><a href="{% url 'login' %}">Авторизация</a></li>
-                <li><a href="{% url 'signup' %}">Регистрация</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main>
+    {% include "header.html" %}
+    <main class="auth-main">
         <h2>Зарегистрироваться</h2>
-        <form method="post">
+        <form method="post" class="auth-form">
             {% csrf_token %}
             <label for="{{ form.username.id_for_label }}">Имя пользователя:</label>
             {{ form.username }}
@@ -29,7 +21,7 @@
             {{ form.password1 }}
             <label for="{{ form.password2.id_for_label }}">Повторите пароль:</label>
             {{ form.password2 }}
-            <button type="submit">Зарегистрироваться</button>
+            <button type="submit" class="auth-btn">Зарегистрироваться</button>
             {% if form.errors %}
                 <div class="errors">
                     <ul>
@@ -46,8 +38,6 @@
             {% endif %}
         </form>
     </main>
-    <footer>
-        <p>&copy; 2025 Cinema. All Rights Reserved.</p>
-    </footer>
+    {% include "footer.html" %}
 </body>
 </html>

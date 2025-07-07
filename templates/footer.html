@@ -1,0 +1,29 @@
+<footer class="main-footer">
+        <div class="footer-container">
+            <div class="footer-logo">
+                <h2 class="logo">KINO<span class="logo-highlight">MORE</span></h2>
+                <p class="footer-slogan">Ваш гид в мире кино</p>
+            </div>
+            <div class="footer-links">
+                <h3 class="footer-title">Навигация</h3>
+                <ul class="footer-list">
+                    <li><a href="{% url 'home' %}" class="footer-link">Главная</a></li>
+                    <li><a href="{% url 'search' %}" class="footer-link">Поиск</a></li>
+                    {% if user.is_authenticated %}
+                    <li><a href="{% url 'favorites' user.id%}" class="footer-link">Избранное</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="footer-contact">
+                <h3 class="footer-title">Контакты</h3>
+                <p class="footer-text">kinomore@gmail.com</p>
+                <div class="social-links">
+                    <a href="#" class="social-link">VK</a>
+                    <a href="#" class="social-link">Telegram</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 KinoMore. Все права защищены.</p>
+        </div>
+    </footer>

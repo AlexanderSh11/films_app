@@ -3,32 +3,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-    <title>Login</title>
-    <link rel="stylesheet" href="{% static '/css/style.css' %}"/>
+    <title>Авторизация - KinoMore</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}"/>
 </head>
 <body>
-    <header>
-        <h1>Cinema</h1>
-        <nav>
-            <ul>
-                <li><a href="{% url 'home' %}">Главная</a></li>
-                <li><a href="{% url 'login' %}">Авторизация</a></li>
-                <li><a href="{% url 'signup' %}">Регистрация</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main>
-        <form method="post">
+    {% include "header.html" %}
+    <main class="auth-main">
+        <h2>Авторизоваться</h2>
+        <form method="post" class="auth-form">
             {% csrf_token %}
             <label for="{{ form.username.id_for_label }}">Имя пользователя:</label>
             {{ form.username }}
             <label for="{{ form.password.id_for_label }}">Пароль:</label>
             {{ form.password }}
-            <button type="submit">Авторизоваться</button>
+            <button type="submit" class="auth-btn">Авторизоваться</button>
         </form>
     </main>
-    <footer>
-        <p>&copy; 2025 Cinema. All Rights Reserved.</p>
-    </footer>
+    {% include "footer.html" %}
 </body>
 </html>

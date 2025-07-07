@@ -14,14 +14,15 @@ class MovieRecommender:
         # все избранные фильмы пользователя
         favorites = Favorite.objects.filter(user=self.user).select_related('movie')
         if user_ratings.count() + favorites.count() < 10:  # минимум 10 избранных/оцененных фильмов для анализа
-            return None, None
+            return None, None, None
         #print("Оценки пользователя:\n", user_ratings, sep="")
         #print()
         #print("Избранное пользователя:\n", favorites, sep="")
         #print()
-        # получаем все жанры и всех режиссеров из избранных фильмов и взвешиваем их
+        # получаем все жанры и всех режиссеров, стран из избранных фильмов и взвешиваем их
         genre_weights = Counter()
         director_weights = Counter()
+        country_weights = Counter()
         total_weight = 0
 
         # обрабатываем оценки (1-5)
@@ -39,6 +40,11 @@ class MovieRecommender:
                 for director in directors:
                     director_weights[director] += weight
             
+            if movie.country:
+                countries = [c.strip().lower() for c in movie.country.split(',')]
+                for country in countries:
+                    country_weights[country] += weight
+            
             total_weight += weight
 
         # обрабатываем избранное (вес = средняя оценка пользователя или 3)
@@ -55,6 +61,11 @@ class MovieRecommender:
                 directors = [d.strip().lower() for d in movie.director.split(',')]
                 for director in directors:
                     director_weights[director] += weight
+
+            if movie.country:
+                countries = [c.strip().lower() for c in movie.country.split(',')]
+                for country in countries:
+                    country_weights[country] += weight
             
             total_weight += weight
         
@@ -68,7 +79,12 @@ class MovieRecommender:
         for director, weight in director_weights.items():
             director_prefs[director] = weight / total_weight
 
-        return genre_prefs, director_prefs
+        # нормализация весов стран
+        country_prefs = {}
+        for country, weight in country_weights.items():
+            country_prefs[country] = weight / total_weight
+
+        return genre_prefs, director_prefs, country_prefs
     
     # возвращает n число рекомендованных фильмов
     def recommend_movies(self, n=5):
@@ -77,12 +93,14 @@ class MovieRecommender:
         if cached:
             return cached
 
-        genre_prefs, director_prefs = self.get_user_preferences()
+        genre_prefs, director_prefs, country_prefs = self.get_user_preferences()
         #print("Веса жанров:\n", genre_prefs, sep="")
         #print()
         #print("Веса режиссеров:\n", director_prefs, sep="")
         #print()
-        if genre_prefs==None or director_prefs==None:
+        #print("Веса стран:\n", country_prefs, sep="")
+        #print()
+        if genre_prefs==None or director_prefs==None or country_prefs==None:
             return []
         
         # получаем все фильмы, которые пользователь еще не добавлял в избранное
@@ -100,13 +118,20 @@ class MovieRecommender:
                 # вычисляем оценку на основе совпадения жанров
                 for genre, pref in genre_prefs.items():
                     if genre in movie_genres:
-                        score += pref * 0.7
+                        score += pref * 0.6
             # оценка по режиссерам
             if director_prefs:
                 movie_directors = [d.strip().lower() for d in movie.director.split(',')]
                 # вычисляем оценку на основе совпадения режиссеров
                 for director, pref in director_prefs.items():
                     if director in movie_directors:
+                        score += pref * 0.4
+            # оценка по странам
+            if country_prefs:
+                movie_countries = [c.strip().lower() for c in movie.country.split(',')]
+                # вычисляем оценку на основе совпадения стран
+                for country, pref in country_prefs.items():
+                    if country in movie_countries:
                         score += pref * 0.3
             
             # учитываем рейтинг фильма

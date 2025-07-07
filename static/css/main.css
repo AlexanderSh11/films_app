@@ -1,0 +1,222 @@
+:root {
+    --primary-color: #002645;
+    --secondary-color: #00335d;
+    --accent-color: #008cff;
+    --header-color: #00335d;
+    --card-bg: #0f3460;
+    --highlight: #4aa8f6;
+    --sea-star: #ffc74c;
+    --text-color1: #f1f1f1;
+    --text-color2: #b8b8b8;
+    --text-color3: #00ACC1;
+    --linear-gradient1: linear-gradient(0deg, #00335d, #008cff);
+    --linear-gradient2: linear-gradient(135deg, #00335d, #008cff);
+}
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    background: var(--linear-gradient1);
+    color: var(--text-color1);
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4 {
+    font-family: 'Playfair Display', serif;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+main {
+    min-height: 45vh;
+}
+
+.main-header {
+    background-color: var(--header-color);
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    height: 15vh;
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.logo-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.logo {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-color1);
+}
+
+.logo-highlight {
+    color: var(--accent-color);
+}
+
+.logo-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-color2);
+    margin-top: -5px;
+}
+
+.main-nav {
+    display: flex;
+}
+
+.nav-list {
+    display: flex;
+    list-style: none;
+}
+
+.nav-item {
+    margin-left: 1.5rem;
+    position: relative;
+}
+
+.nav-link {
+    color: var(--text-color1);
+    font-weight: 600;
+    transition: color 0.3s;
+    padding: 0;
+    display: inline-flex;
+    align-items: flex-start;
+}
+
+.nav-link:hover {
+    color: var(--accent-color);
+}
+
+.nav-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 0%;
+    height: 2px;
+    background-color: var(--accent-color);
+    transition: width 0.3s ease;
+}
+
+.nav-link:hover::after {
+    width: 100%;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+}
+
+.username {
+    margin-right: 0.5rem;
+}
+
+.profile-icon {
+    fill: var(--text-color1);
+    transition: fill 0.3s;
+}
+
+.user-profile:hover .profile-icon {
+    fill: var(--accent-color);
+}
+
+.logout-link {
+    color: var(--text-color2);
+    transition: color 0.3s;
+}
+
+.logout-link:hover {
+    color: var(--accent-color);
+}
+
+.main-footer {
+    background-color: var(--secondary-color);
+    padding: 3rem 0 0;
+    height: 40vh;
+}
+
+.footer-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.footer-logo {
+    margin-bottom: 1.5rem;
+}
+
+.footer-slogan {
+    color: var(--text-color2);
+    margin-top: 0.5rem;
+}
+
+.footer-title {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: var(--text-color1);
+}
+
+.footer-list {
+    list-style: none;
+}
+
+.footer-list li {
+    margin-bottom: 0.5rem;
+}
+
+.footer-link {
+    color: var(--text-color2);
+    transition: color 0.3s;
+}
+
+.footer-link:hover {
+    color: var(--accent-color);
+}
+
+.footer-text {
+    color: var(--text-color2);
+    margin-bottom: 1rem;
+}
+
+.social-links {
+    display: flex;
+    gap: 1rem;
+}
+
+.social-link {
+    color: var(--text-color2);
+    transition: color 0.3s;
+}
+
+.social-link:hover {
+    color: var(--accent-color);
+}
+
+.footer-bottom {
+    text-align: center;
+    padding: 1.5rem 0;
+    margin-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-color2);
+    font-size: 0.9rem;
+}

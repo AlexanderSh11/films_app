@@ -1,0 +1,186 @@
+.movie-detail-section {
+    max-width: 1400px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+}
+
+.movie-detail-container {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1.5rem;
+}
+
+.movie-poster-container {
+    flex: 0 0 350px;
+}
+
+.movie-poster-large {
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s;
+}
+
+.movie-poster-large:hover {
+    transform: scale(1.02);
+}
+
+.no-poster-large {
+    width: 100%;
+    height: 525px;
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+
+.no-poster-large p {
+    margin-top: 1rem;
+}
+
+.movie-info-container {
+    flex: 1;
+}
+
+.movie-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.movie-title {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.movie-meta {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    color: var(--text-secondary);
+}
+
+.movie-year, .movie-country {
+    font-size: 1.1rem;
+}
+
+.movie-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-weight: 600;
+}
+
+.movie-genre {
+    background-color: var(--accent-color);
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+
+.detail-row {
+    margin-bottom: 1.5rem;
+}
+
+.detail-label {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: var(--accent-color);
+}
+
+.detail-value {
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+.overview {
+    text-align: justify;
+}
+
+.user-actions {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.rating-form {
+    margin-bottom: 1.5rem;
+}
+
+.star-rating {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    margin: 0.5rem 0 1rem;
+    gap: 1rem;
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating label {
+    color: #ccc;
+    font-size: 2rem;
+    padding: 0 0.1rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.star-rating input:checked ~ label,
+.star-rating input:hover ~ label {
+    color: var(--sea-star);
+}
+
+.star-rating label:hover,
+.star-rating label:hover ~ label {
+    color: var(--sea-star);
+}
+
+.rating-submit {
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s;
+}
+
+.rating-submit:hover {
+    background-color: #d13354;
+}
+
+.favorite-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.2rem;
+    border-radius: 4px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.add-favorite {
+    background-color: var(--success);
+    color: white;
+}
+
+.add-favorite:hover {
+    background-color: #3d8b40;
+}
+
+.remove-favorite {
+    background-color: var(--warning);
+    color: white;
+}
+
+.remove-favorite:hover {
+    background-color: #d32f2f;
+}
