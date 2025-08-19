@@ -25,7 +25,7 @@ class MovieRecommender:
         country_weights = Counter()
         total_weight = 0
 
-        # обрабатываем оценки (1-5)
+        # обрабатываем оценки (1-10)
         for rating in user_ratings:
             weight = rating.user_rating  # Вес = оценка
             movie = rating.movie
@@ -47,8 +47,8 @@ class MovieRecommender:
             
             total_weight += weight
 
-        # обрабатываем избранное (вес = средняя оценка пользователя или 3)
-        weight = user_ratings.aggregate(Avg('user_rating'))['user_rating__avg'] or 3
+        # обрабатываем избранное (вес = средняя оценка пользователя или 5)
+        weight = user_ratings.aggregate(Avg('user_rating'))['user_rating__avg'] or 5
         for fav in Favorite.objects.filter(user=self.user).select_related('movie'):
             movie = fav.movie
             
@@ -107,7 +107,7 @@ class MovieRecommender:
         excluded_ids = Favorite.objects.filter(user=self.user).values_list('movie_id', flat=True)
         all_movies = Movie.objects.exclude(id__in=excluded_ids)
         
-        # создаем список для хранения фильмов. score - показатель рекоммендации: чем выше, тем более подходящий пользователю
+        # создаем список для хранения фильмов. score - показатель рекомендации: чем выше, тем более подходящий пользователю
         scored_movies = []
         
         for movie in all_movies:

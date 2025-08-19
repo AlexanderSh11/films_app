@@ -52,7 +52,7 @@
                         <div class="movie-info">
                             <h3 class="movie-title">{{ favorite.movie.movie_name }}</h3>
                             <p class="movie-meta">{{ favorite.movie.year }} • {{ favorite.movie.country }}</p>
-                            <p class="movie-meta">{{ movie.genre }}</p>
+                            <p class="movie-meta">{{ favorite.movie.genre }}</p>
                             <p class="movie-director">Режиссер: {{ favorite.movie.director }}</p>
                             <div class="movie-actions">
                                 <a href="{% url 'remove_from_favorites' favorite.movie.id %}" class="action-btn remove-btn">

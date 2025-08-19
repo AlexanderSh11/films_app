@@ -62,7 +62,10 @@
                                 <form method="post" action="{% url 'rate_movie' movie.id %}">
                                     {% csrf_token %}
                                     <div class="star-rating">
-                                        {% for i in "54321" %}
+                                        <input type="radio" id="star10" name="user_rating" value="10"
+                                            {% if user_rating == 10 %}checked{% endif %}>
+                                        <label for="star10" title="10★">10★</label>
+                                        {% for i in "987654321" %}
                                             <input type="radio" id="star{{ i }}" name="user_rating" value="{{ i }}" 
                                                 {% if user_rating == i|add:"0" %}checked{% endif %}>
                                             <label for="star{{ i }}" title="{{ i }}★">{{ i }}★</label>

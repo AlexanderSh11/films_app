@@ -16,12 +16,15 @@ class SearchPageView(TemplateView):
         context = super().get_context_data(**kwargs)
         request = self.request
         genre = request.GET.get('genre', 'Все')
+        title = request.GET.get('title', '')
         sort = request.GET.get('sort', 'newest')
         movies = Movie.objects.all()
         for movie in movies:
             movie.genre_list = movie.genre.split(", ")
         if genre != 'Все':
             movies = Movie.objects.filter(genre__icontains=genre)
+        if title != '':
+            movies = movies.filter(movie_name__icontains=title)
         if sort == 'названию':
             movies = movies.order_by('movie_name', 'year')
         elif sort == 'рейтингу (сначала лучшие)':

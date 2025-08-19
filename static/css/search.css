@@ -17,12 +17,6 @@
     color: var(--text-color);
 }
 
-.search-subtitle {
-    color: var(--text-secondary);
-    margin-bottom: 2rem;
-    font-size: 1.1rem;
-}
-
 .search-filters {
     margin-bottom: 2rem;
 }

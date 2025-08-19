@@ -41,7 +41,7 @@ class MovieRating(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
-    user_rating = models.PositiveIntegerField(blank=True, null=True, choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5'),])
+    user_rating = models.PositiveIntegerField(blank=True, null=True, choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5'), (6, '6'), (7, '7'), (8, '8'), (9, '9'), (10, '10'),])
     added_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

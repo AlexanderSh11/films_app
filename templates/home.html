@@ -35,7 +35,7 @@
                                 {% if movie.id in user_favorites %}
                                     <a href="{% url 'remove_from_favorites' movie.id %}" class="action-btn remove-btn">
                                         <svg width="16" height="16" viewBox="0 0 24 24">
-                                            <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                                            <path fill="currentColor" d="M19 13H5v-2h14v2z"/>
                                         </svg>
                                         Удалить
                                     </a>
@@ -85,7 +85,7 @@
                                     {% if movie.id in user_favorites %}
                                         <a href="{% url 'remove_from_favorites' movie.id %}" class="action-btn remove-btn">
                                             <svg width="16" height="16" viewBox="0 0 24 24">
-                                                <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                                                <path fill="currentColor" d="M19 13H5v-2h14v2z"/>
                                             </svg>
                                             Удалить
                                         </a>
