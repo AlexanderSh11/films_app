@@ -99,9 +99,29 @@
                         </div>
                         <div class="movie-info">
                             <h3 class="movie-title">{{ movie.movie_name }}</h3>
-                            <p class="movie-meta">{{ movie.year }} • {{ movie.country }}</p>
-                            <p class="movie-meta">{{ movie.genre }}</p>
-                            <p class="movie-director">Режиссер: {{ movie.director }}</p>
+                            <p class="movie-meta">
+                                {{ movie.year }} • 
+                                {% for c in movie.country.all %}
+                                    {{ c.name }}{% if not forloop.last %}, {% endif %}
+                                {% empty %}
+                                    Не указана
+                                {% endfor %}
+                            </p>
+                            <p class="movie-meta">
+                                {% for g in movie.genre.all %}
+                                    {{ g.name }}{% if not forloop.last %}, {% endif %}
+                                {% empty %}
+                                    Не указан
+                                {% endfor %}
+                            </p>
+                            <p class="movie-director">
+                                Режиссер: 
+                                {% for d in movie.director.all %}
+                                    {{ d.name }}{% if not forloop.last %}, {% endif %}
+                                {% empty %}
+                                    Не указан
+                                {% endfor %}
+                            </p>
                             <div class="movie-actions">
                                 {% if user.is_authenticated %}
                                     {% if movie.id in user_favorites %}

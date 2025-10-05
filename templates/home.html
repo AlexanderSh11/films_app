@@ -1,114 +1,150 @@
 <!DOCTYPE html>
 {% load static %}
 <html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Главная страница - KinoMore</title>
-    <link rel="stylesheet" href="{% static 'css/main.css' %}"/>
-    <link rel="stylesheet" href="{% static 'css/home.css' %}"/>
-    <link rel="stylesheet" href="{% static 'css/movie-card.css' %}"/>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-</head>
-<body>
-    {% include "header.html" %}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/home.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/movie-card.css' %}" />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    {% include 'header.html' %}
 
     <main class="main-content">
-        {% if show_recommendations %}
+      {% if show_recommendations %}
         <section class="movie-section">
-            <script src="{% static 'js/scrolling.js' %}"></script>
-            <h2 class="section-title">Рекомендации для вас <span class="highlight">★</span></h2>
-            <div class="movie-scroll-container">
-                <div class="movie-row">
-                    {% for movie in recommendations %}
-                    <div class="movie-card">
-                        <div class="movie-poster-container">
-                            <img src="{{ movie.poster_link }}" alt="{{ movie.movie_name }}" class="movie-poster">
-                            <div class="movie-rating">{{ movie.rating }}</div>
-                        </div>
-                        <div class="movie-info">
-                            <h3 class="movie-title">{{ movie.movie_name }}</h3>
-                            <p class="movie-meta">{{ movie.year }} • {{ movie.country }}</p>
-                            <p class="movie-meta">{{ movie.genre }}</p>
-                            <p class="movie-director">Режиссер: {{ movie.director }}</p>
-                            <div class="movie-actions">
-                                {% if movie.id in user_favorites %}
-                                    <a href="{% url 'remove_from_favorites' movie.id %}" class="action-btn remove-btn">
-                                        <svg width="16" height="16" viewBox="0 0 24 24">
-                                            <path fill="currentColor" d="M19 13H5v-2h14v2z"/>
-                                        </svg>
-                                        Удалить
-                                    </a>
-                                {% else %}
-                                    <a href="{% url 'add_to_favorites' movie.id %}" class="action-btn add-btn">
-                                        <svg width="16" height="16" viewBox="0 0 24 24">
-                                            <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-                                        </svg>
-                                        В избранное
-                                    </a>
-                                {% endif %}
-                                <a href="{% url 'movie_detail' movie.id %}" class="action-btn details-btn">Подробнее</a>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </section>
-        {% endif %}
+          <script src="{% static 'js/scrolling.js' %}"></script>
+          <h2 class="section-title">Рекомендации для вас <span class="highlight">★</span></h2>
+          <div class="movie-scroll-container">
+            <div class="movie-row">
+              {% for movie in recommendations %}
+                <div class="movie-card">
+                  <div class="movie-poster-container">
+                    <img src="{{ movie.poster_link }}" alt="{{ movie.movie_name }}" class="movie-poster" />
+                    <div class="movie-rating">{{ movie.rating }}</div>
+                  </div>
+                  <div class="movie-info">
+                    <h3 class="movie-title">{{ movie.movie_name }}</h3>
+                    <p class="movie-meta">
+                      {{ movie.year }} •{% for country in movie.country.all %}
+                        {{ country.name }}{% if not forloop.last %}, {% endif %}
+                      {% empty %}
+                        Не указано
+                      {% endfor %}
+                    </p>
 
-        {% for genre, movies in movies_by_genre.items %}
-        <section class="movie-section">
-            <h2 class="section-title">{{ genre }}</h2>
-            <div class="movie-scroll-container">
-                <div class="movie-row">
-                    {% for movie in movies %}
-                    <div class="movie-card">
-                        <div class="movie-poster-container">
-                            <img src="{{ movie.poster_link }}" alt="{{ movie.movie_name }}" class="movie-poster">
-                            <div class="movie-rating">{{ movie.rating }}</div>
-                            {% if movie.id in user_favorites %}
-                            <div class="favorite-badge">
-                                <svg width="24" height="24" viewBox="0 0 24 24">
-                                    <path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                                </svg>
-                            </div>
-                            {% endif %}
-                        </div>
-                        <div class="movie-info">
-                            <h3 class="movie-title">{{ movie.movie_name }}</h3>
-                            <p class="movie-meta">{{ movie.year }} • {{ movie.country }}</p>
-                            <p class="movie-meta">{{ movie.genre }}</p>
-                            <p class="movie-director">Режиссер: {{ movie.director }}</p>
-                            <div class="movie-actions">
-                                {% if user.is_authenticated %}
-                                    {% if movie.id in user_favorites %}
-                                        <a href="{% url 'remove_from_favorites' movie.id %}" class="action-btn remove-btn">
-                                            <svg width="16" height="16" viewBox="0 0 24 24">
-                                                <path fill="currentColor" d="M19 13H5v-2h14v2z"/>
-                                            </svg>
-                                            Удалить
-                                        </a>
-                                    {% else %}
-                                        <a href="{% url 'add_to_favorites' movie.id %}" class="action-btn add-btn">
-                                            <svg width="16" height="16" viewBox="0 0 24 24">
-                                                <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-                                            </svg>
-                                            В избранное
-                                        </a>
-                                    {% endif %}
-                                {% endif %}
-                                <a href="{% url 'movie_detail' movie.id %}" class="action-btn details-btn">Подробнее</a>
-                            </div>
-                        </div>
+                    <p class="movie-meta">
+                      {% for genre in movie.genre.all %}
+                        {{ genre.name }}{% if not forloop.last %}, {% endif %}
+                      {% empty %}
+                        Не указано
+                      {% endfor %}
+                    </p>
+
+                    <p class="movie-director">
+                      Режиссер:{% for director in movie.director.all %}
+                        {{ director.name }}{% if not forloop.last %}, {% endif %}
+                      {% empty %}
+                        Не указано
+                      {% endfor %}
+                    </p>
+                    <div class="movie-actions">
+                      {% if movie.id in user_favorites %}
+                        <a href="{% url 'remove_from_favorites' movie.id %}" class="action-btn remove-btn">
+                          <svg width="16" height="16" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M19 13H5v-2h14v2z" />
+                          </svg>Удалить
+                        </a>
+                      {% else %}
+                        <a href="{% url 'add_to_favorites' movie.id %}" class="action-btn add-btn">
+                          <svg width="16" height="16" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                          </svg>В избранное
+                        </a>
+                      {% endif %}
+                      <a href="{% url 'movie_detail' movie.id %}" class="action-btn details-btn">Подробнее</a>
                     </div>
-                    {% endfor %}
+                  </div>
                 </div>
+              {% endfor %}
             </div>
+          </div>
         </section>
-        {% endfor %}
+      {% endif %}
+
+      {% for genre, movies in movies_by_genre.items %}
+        <section class="movie-section">
+          <h2 class="section-title">{{ genre }}</h2>
+          <div class="movie-scroll-container">
+            <div class="movie-row">
+              {% for movie in movies %}
+                <div class="movie-card">
+                  <div class="movie-poster-container">
+                    <img src="{{ movie.poster_link }}" alt="{{ movie.movie_name }}" class="movie-poster" />
+                    <div class="movie-rating">{{ movie.rating }}</div>
+                    {% if movie.id in user_favorites %}
+                      <div class="favorite-badge">
+                        <svg width="24" height="24" viewBox="0 0 24 24">
+                          <path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                        </svg>
+                      </div>
+                    {% endif %}
+                  </div>
+                  <div class="movie-info">
+                    <h3 class="movie-title">{{ movie.movie_name }}</h3>
+                    <p class="movie-meta">
+                      {{ movie.year }} •{% for country in movie.country.all %}
+                        {{ country.name }}{% if not forloop.last %}, {% endif %}
+                      {% empty %}
+                        Не указано
+                      {% endfor %}
+                    </p>
+
+                    <p class="movie-meta">
+                      {% for genre in movie.genre.all %}
+                        {{ genre.name }}{% if not forloop.last %}, {% endif %}
+                      {% empty %}
+                        Не указано
+                      {% endfor %}
+                    </p>
+
+                    <p class="movie-director">
+                      Режиссер:{% for director in movie.director.all %}
+                        {{ director.name }}{% if not forloop.last %}, {% endif %}
+                      {% empty %}
+                        Не указано
+                      {% endfor %}
+                    </p>
+                    <div class="movie-actions">
+                      {% if user.is_authenticated %}
+                        {% if movie.id in user_favorites %}
+                          <a href="{% url 'remove_from_favorites' movie.id %}" class="action-btn remove-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24">
+                              <path fill="currentColor" d="M19 13H5v-2h14v2z" />
+                            </svg>Удалить
+                          </a>
+                        {% else %}
+                          <a href="{% url 'add_to_favorites' movie.id %}" class="action-btn add-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24">
+                              <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                            </svg>В избранное
+                          </a>
+                        {% endif %}
+                      {% endif %}
+                      <a href="{% url 'movie_detail' movie.id %}" class="action-btn details-btn">Подробнее</a>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </section>
+      {% endfor %}
     </main>
 
-    {% include "footer.html" %}
-</body>
+    {% include 'footer.html' %}
+  </body>
 </html>
