@@ -2,6 +2,14 @@ from datetime import timezone
 from django.db import models
 from django.contrib.auth.models import User
 
+AGE_RATINGS = [
+    (0, '0+'),
+    (6, '6+'),
+    (12, '12+'),
+    (16, '16+'),
+    (18, '18+'),
+]
+
 class Genre(models.Model):
     name = models.CharField(max_length=128, unique=True, verbose_name='Жанр')
 
@@ -45,6 +53,7 @@ class Movie(models.Model):
     rating = models.FloatField(blank=True, null=True, verbose_name = 'Оценка')
     overview = models.TextField(blank=True, null=True, verbose_name = 'Описание')
     meta_score = models.IntegerField(blank=True, null=True, verbose_name = 'Meta-оценка')
+    age_rating = models.IntegerField(blank=True, null=True, choices=AGE_RATINGS, verbose_name = 'Возрастной рейтинг')
     
     genre = models.ManyToManyField('Genre', blank=True, verbose_name='Жанры')
     director = models.ManyToManyField('Director', blank=True, verbose_name='Режиссёры')
