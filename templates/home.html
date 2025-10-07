@@ -32,7 +32,6 @@
                       {{ movie.year }} •{% for country in movie.country.all %}
                         {{ country.name }}{% if not forloop.last %}, {% endif %}
                       {% empty %}
-                        Не указано
                       {% endfor %}
                     </p>
 
@@ -40,7 +39,7 @@
                       {% for genre in movie.genre.all %}
                         {{ genre.name }}{% if not forloop.last %}, {% endif %}
                       {% empty %}
-                        Не указано
+                      Не указано
                       {% endfor %}
                     </p>
 
@@ -48,7 +47,7 @@
                       Режиссер:{% for director in movie.director.all %}
                         {{ director.name }}{% if not forloop.last %}, {% endif %}
                       {% empty %}
-                        Не указано
+                      Не указано
                       {% endfor %}
                     </p>
                     <div class="movie-actions">
@@ -99,7 +98,6 @@
                       {{ movie.year }} •{% for country in movie.country.all %}
                         {{ country.name }}{% if not forloop.last %}, {% endif %}
                       {% empty %}
-                        Не указано
                       {% endfor %}
                     </p>
 

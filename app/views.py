@@ -1,3 +1,4 @@
+from collections import defaultdict
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
@@ -20,7 +21,7 @@ class SearchPageView(TemplateView):
         title = request.GET.get('title', '')
         sort = request.GET.get('sort', 'newest')
 
-        movies = Movie.objects.all()
+        movies = Movie.objects.prefetch_related('genre').all()
 
         # Преобразуем ManyToManyField в список имен
         for movie in movies:
@@ -62,13 +63,13 @@ class HomePageView(TemplateView):
         context = super().get_context_data(**kwargs)
         request = self.request
 
-        movies_by_genre = {}
-        movies = Movie.objects.all()
+        movies = Movie.objects.prefetch_related('genre').all()
 
+        movies_by_genre = defaultdict(list)
         for movie in movies:
-            movie_genres = [g.name for g in movie.genre.all()]
-            for movie_genre in movie_genres:
-                movies_by_genre.setdefault(movie_genre, []).append(movie)
+            for g in movie.genre.all():
+                if len(movies_by_genre[g.name]) < 10:
+                    movies_by_genre[g.name].append(movie)
 
         user_favorites_ids = []
         recommendations = []
@@ -77,7 +78,7 @@ class HomePageView(TemplateView):
             recommender = MovieRecommender(request.user)
             recommendations = recommender.recommend_movies(10)
 
-        context['movies_by_genre'] = movies_by_genre
+        context['movies_by_genre'] = dict(movies_by_genre)
         context['user_favorites'] = user_favorites_ids
         context['recommendations'] = recommendations
         context['show_recommendations'] = recommendations

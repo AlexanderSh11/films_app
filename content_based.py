@@ -31,17 +31,17 @@ class MovieRecommender:
             movie = rating.movie
             
             if movie.genre:
-                genres = [g.strip().lower() for g in movie.genre.split(',')]
+                genres = [g.name.lower() for g in movie.genre.all()]
                 for genre in genres:
                     genre_weights[genre] += weight
             
             if movie.director:
-                directors = [d.strip().lower() for d in movie.director.split(',')]
+                directors = [d.name.lower() for d in movie.director.all()]
                 for director in directors:
                     director_weights[director] += weight
             
             if movie.country:
-                countries = [c.strip().lower() for c in movie.country.split(',')]
+                countries = [c.name.lower() for c in movie.country.all()]
                 for country in countries:
                     country_weights[country] += weight
             
@@ -53,17 +53,17 @@ class MovieRecommender:
             movie = fav.movie
             
             if movie.genre:
-                genres = [g.strip().lower() for g in movie.genre.split(',')]
+                genres = [g.name.lower() for g in movie.genre.all()]
                 for genre in genres:
                     genre_weights[genre] += weight
             
             if movie.director:
-                directors = [d.strip().lower() for d in movie.director.split(',')]
+                directors = [d.name.lower() for d in movie.director.all()]
                 for director in directors:
                     director_weights[director] += weight
 
             if movie.country:
-                countries = [c.strip().lower() for c in movie.country.split(',')]
+                countries = [c.name.lower() for c in movie.country.all()]
                 for country in countries:
                     country_weights[country] += weight
             
@@ -114,21 +114,21 @@ class MovieRecommender:
             score = 0
             # оценка по жанрам
             if genre_prefs:
-                movie_genres = [g.strip().lower() for g in movie.genre.split(',')]
+                movie_genres = [g.name.lower() for g in movie.genre.all()]
                 # вычисляем оценку на основе совпадения жанров
                 for genre, pref in genre_prefs.items():
                     if genre in movie_genres:
                         score += pref * 0.6
             # оценка по режиссерам
             if director_prefs:
-                movie_directors = [d.strip().lower() for d in movie.director.split(',')]
+                movie_directors = [d.name.lower() for d in movie.director.all()]
                 # вычисляем оценку на основе совпадения режиссеров
                 for director, pref in director_prefs.items():
                     if director in movie_directors:
                         score += pref * 0.4
             # оценка по странам
             if country_prefs:
-                movie_countries = [c.strip().lower() for c in movie.country.split(',')]
+                movie_countries = [c.name.lower() for c in movie.country.all()]
                 # вычисляем оценку на основе совпадения стран
                 for country, pref in country_prefs.items():
                     if country in movie_countries:

@@ -104,14 +104,13 @@
                                 {% for c in movie.country.all %}
                                     {{ c.name }}{% if not forloop.last %}, {% endif %}
                                 {% empty %}
-                                    Не указана
                                 {% endfor %}
                             </p>
                             <p class="movie-meta">
                                 {% for g in movie.genre.all %}
                                     {{ g.name }}{% if not forloop.last %}, {% endif %}
                                 {% empty %}
-                                    Не указан
+                                    Не указано
                                 {% endfor %}
                             </p>
                             <p class="movie-director">
@@ -119,7 +118,7 @@
                                 {% for d in movie.director.all %}
                                     {{ d.name }}{% if not forloop.last %}, {% endif %}
                                 {% empty %}
-                                    Не указан
+                                    Не указано
                                 {% endfor %}
                             </p>
                             <div class="movie-actions">
