@@ -10,9 +10,9 @@ class MovieRecommender:
     # получить предпочтения пользователя в жанрах и режиссерах
     def get_user_preferences(self):
         # все оценки пользователя
-        user_ratings = MovieRating.objects.filter(user=self.user).select_related('movie')
+        user_ratings = MovieRating.objects.filter(user=self.user).select_related('movie').prefetch_related('movie__genre', 'movie__director', 'movie__country')
         # все избранные фильмы пользователя
-        favorites = Favorite.objects.filter(user=self.user).select_related('movie')
+        favorites = Favorite.objects.filter(user=self.user).select_related('movie').prefetch_related('movie__genre', 'movie__director', 'movie__country')
         if user_ratings.count() + favorites.count() < 10:  # минимум 10 избранных/оцененных фильмов для анализа
             return None, None, None
         #print("Оценки пользователя:\n", user_ratings, sep="")
@@ -30,42 +30,26 @@ class MovieRecommender:
             weight = rating.user_rating  # Вес = оценка
             movie = rating.movie
             
-            if movie.genre:
-                genres = [g.name.lower() for g in movie.genre.all()]
-                for genre in genres:
-                    genre_weights[genre] += weight
-            
-            if movie.director:
-                directors = [d.name.lower() for d in movie.director.all()]
-                for director in directors:
-                    director_weights[director] += weight
-            
-            if movie.country:
-                countries = [c.name.lower() for c in movie.country.all()]
-                for country in countries:
-                    country_weights[country] += weight
+            for g in movie.genre.all():
+                genre_weights[g.name.lower()] += weight
+            for d in movie.director.all():
+                director_weights[d.name.lower()] += weight
+            for c in movie.country.all():
+                country_weights[c.name.lower()] += weight
             
             total_weight += weight
 
         # обрабатываем избранное (вес = средняя оценка пользователя или 5)
         weight = user_ratings.aggregate(Avg('user_rating'))['user_rating__avg'] or 5
-        for fav in Favorite.objects.filter(user=self.user).select_related('movie'):
+        for fav in favorites:
             movie = fav.movie
             
-            if movie.genre:
-                genres = [g.name.lower() for g in movie.genre.all()]
-                for genre in genres:
-                    genre_weights[genre] += weight
-            
-            if movie.director:
-                directors = [d.name.lower() for d in movie.director.all()]
-                for director in directors:
-                    director_weights[director] += weight
-
-            if movie.country:
-                countries = [c.name.lower() for c in movie.country.all()]
-                for country in countries:
-                    country_weights[country] += weight
+            for g in movie.genre.all():
+                genre_weights[g.name.lower()] += weight
+            for d in movie.director.all():
+                director_weights[d.name.lower()] += weight
+            for c in movie.country.all():
+                country_weights[c.name.lower()] += weight
             
             total_weight += weight
         
@@ -105,34 +89,31 @@ class MovieRecommender:
         
         # получаем все фильмы, которые пользователь еще не добавлял в избранное
         excluded_ids = Favorite.objects.filter(user=self.user).values_list('movie_id', flat=True)
-        all_movies = Movie.objects.exclude(id__in=excluded_ids)
+        all_movies = Movie.objects.exclude(id__in=excluded_ids).prefetch_related('genre', 'director', 'country')
         
         # создаем список для хранения фильмов. score - показатель рекомендации: чем выше, тем более подходящий пользователю
         scored_movies = []
         
         for movie in all_movies:
+            movie_genres = {g.name.lower() for g in movie.genre.all()}
+            movie_directors = {d.name.lower() for d in movie.director.all()}
+            movie_countries = {c.name.lower() for c in movie.country.all()}
             score = 0
             # оценка по жанрам
-            if genre_prefs:
-                movie_genres = [g.name.lower() for g in movie.genre.all()]
+            for genre, pref in genre_prefs.items():
                 # вычисляем оценку на основе совпадения жанров
-                for genre, pref in genre_prefs.items():
-                    if genre in movie_genres:
-                        score += pref * 0.6
+                if genre in movie_genres:
+                    score += pref * 0.6
             # оценка по режиссерам
-            if director_prefs:
-                movie_directors = [d.name.lower() for d in movie.director.all()]
+            for director, pref in director_prefs.items():
                 # вычисляем оценку на основе совпадения режиссеров
-                for director, pref in director_prefs.items():
-                    if director in movie_directors:
-                        score += pref * 0.4
+                if director in movie_directors:
+                    score += pref * 0.4
             # оценка по странам
-            if country_prefs:
-                movie_countries = [c.name.lower() for c in movie.country.all()]
+            for country, pref in country_prefs.items():
                 # вычисляем оценку на основе совпадения стран
-                for country, pref in country_prefs.items():
-                    if country in movie_countries:
-                        score += pref * 0.3
+                if country in movie_countries:
+                    score += pref * 0.3
             
             # учитываем рейтинг фильма
             if movie.rating:

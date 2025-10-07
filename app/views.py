@@ -23,10 +23,6 @@ class SearchPageView(TemplateView):
 
         movies = Movie.objects.prefetch_related('genre').all()
 
-        # Преобразуем ManyToManyField в список имен
-        for movie in movies:
-            movie.genre_list = [g.name for g in movie.genre.all()]
-
         if genre != 'Все':
             movies = movies.filter(genre__name__icontains=genre)
 
@@ -86,7 +82,7 @@ class HomePageView(TemplateView):
 
 
 def movie_detail(request, movie_id):
-    movie = get_object_or_404(Movie, id=movie_id)
+    movie = get_object_or_404(Movie.objects.prefetch_related('genre', 'director', 'country'), id=movie_id)
     is_favorite = False
     user_rating = 'Нет оценки'
 
