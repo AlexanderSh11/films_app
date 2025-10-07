@@ -1,4 +1,6 @@
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
+from django.core.cache import cache
+import time
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
@@ -61,11 +63,16 @@ class HomePageView(TemplateView):
 
         movies = Movie.objects.prefetch_related('genre').all()
 
-        movies_by_genre = defaultdict(list)
-        for movie in movies:
-            for g in movie.genre.all():
-                if len(movies_by_genre[g.name]) < 10:
-                    movies_by_genre[g.name].append(movie)
+        cached = cache.get('movies_by_genre')
+        if cached:
+            movies_by_genre = cached
+        else:
+            movies_by_genre = defaultdict(list)
+            for movie in movies:
+                for g in movie.genre.all():
+                    if len(movies_by_genre[g.name]) < 10:
+                        movies_by_genre[g.name].append(movie)
+            cache.set('movies_by_genre', movies_by_genre, 60*5) # кеширование фильмов по жанрам
 
         user_favorites_ids = []
         recommendations = []

@@ -129,5 +129,5 @@ class MovieRecommender:
         #    print(movie)
         # возвращаем топ-N фильмов
         recommendations = [movie for movie, score in scored_movies[:n]]
-        cache.set(cache_key, recommendations, timeout=3)
+        cache.set(cache_key, recommendations, timeout=60*1)
         return recommendations
