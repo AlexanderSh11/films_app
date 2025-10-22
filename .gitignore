@@ -4,4 +4,3 @@ movies.csv
 db.sqlite3
 get_movies_api.py
 users_clasters_generating.py
-generating_synthetic_users.py
