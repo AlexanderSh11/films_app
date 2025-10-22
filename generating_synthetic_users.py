@@ -195,13 +195,13 @@ class UsersGenerator:
         from app.models import Favorite, MovieRating
         # для обеспечения целостности данных
         with transaction.atomic():
+            password = make_password('password_user')
             for user_info in user_data:
                 try:
                     # создаем пользователя
                     username = f"user_{user_info['user_id']}"
                     email = f"{username}@example.com"
                     
-                    password = make_password(f'password_{username}')
                     user, created = User.objects.get_or_create(
                         username=username,
                         defaults={
