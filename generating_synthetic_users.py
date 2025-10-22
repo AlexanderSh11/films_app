@@ -190,6 +190,7 @@ class UsersGenerator:
             
     def save_data_to_db(self, user_data):
         from django.contrib.auth.models import User
+        from django.contrib.auth.hashers import make_password
         from django.db import transaction
         from app.models import Favorite, MovieRating
         # для обеспечения целостности данных
@@ -200,11 +201,12 @@ class UsersGenerator:
                     username = f"user_{user_info['user_id']}"
                     email = f"{username}@example.com"
                     
+                    password = make_password(f'password_{username}')
                     user, created = User.objects.get_or_create(
                         username=username,
                         defaults={
                             'email': email,
-                            'password': f'password_{username}'
+                            'password': password
                         }
                     )
                     if not created:
