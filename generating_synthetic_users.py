@@ -187,6 +187,59 @@ class UsersGenerator:
         print(f"Первые {n} оценок:")
         for mid, r in list(user_info["ratings"].items())[:n]:
             print(f"  Фильм ID {mid}: оценка {r}")
+            
+    def save_data_to_db(self, user_data):
+        from django.contrib.auth.models import User
+        from django.db import transaction
+        from app.models import Favorite, MovieRating
+        # для обеспечения целостности данных
+        with transaction.atomic():
+            for user_info in user_data:
+                try:
+                    # создаем пользователя
+                    username = f"user_{user_info['user_id']}"
+                    email = f"{username}@example.com"
+                    
+                    user, created = User.objects.get_or_create(
+                        username=username,
+                        defaults={
+                            'email': email,
+                            'password': f'password_{username}'
+                        }
+                    )
+                    if not created:
+                        print(f"Пользователь {username} уже существует, обновляем данные")
+                    
+                    # сохраняем избранные фильмы
+                    favorites_created = 0
+                    for movie_id in user_info['favorites']:
+                        try:
+                            favorite, fav_created = Favorite.objects.get_or_create(
+                                user=user,
+                                movie_id=movie_id
+                            )
+                            if fav_created:
+                                favorites_created += 1
+                        except Exception as e:
+                            print(f"Ошибка при создании избранного для пользователя {username}, фильм {movie_id}: {e}")
+                    
+                    # сохраняем оценки фильмов
+                    ratings_created = 0
+                    for movie_id, rating_value in user_info['ratings'].items():
+                        try:
+                            rating, rating_created = MovieRating.objects.get_or_create(
+                                user=user,
+                                movie_id=movie_id,
+                                defaults={'user_rating': rating_value}
+                            )
+                            if rating_created:
+                                ratings_created += 1
+                        except Exception as e:
+                            print(f"Ошибка при создании оценки для пользователя {username}, фильм {movie_id}: {e}")
+                    
+                except Exception as e:
+                    print(f"Ошибка при обработке пользователя {user_info['user_id']}: {e}")
+                    continue
     
 
 # класс Визуализатор
@@ -393,7 +446,7 @@ def main():
         'decade_count_10', 'decade_count_20', 'count_ratings', 'max_rating_count', 'favorites_count',
         'avg_runtime', 'avg_age_rating'
     ]
-    N_users = 100
+    N_users = 1000
     generator = UsersGenerator(clusters=clusters, n_users=1000, features=features)
     data = generator.generate_data()
     print("Сгенерированы пользователи.")
@@ -449,6 +502,7 @@ def main():
             break
 
     generator.print_user_info(user_data[-1])
+    generator.save_data_to_db(user_data)
 
 if __name__ == "__main__":
     main()
