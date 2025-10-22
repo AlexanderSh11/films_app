@@ -10,27 +10,28 @@ import pandas as pd
 from sklearn.cluster import KMeans
 import seaborn as sns
 
+# класс Кластера
 class Cluster:
 
     def __init__(self, name: str, center: list, std: float):
         self.name = name
-        self.center = center
-        self.std = std
+        self.center = center # центроид класса в виде списка чисел
+        self.std = std # стандартное отклонение
 
     def get_params(self):
         return {'center': self.center, 'std': self.std}
 
-
+# класс Генератора пользователей
 class UsersGenerator:
 
     def __init__(self, clusters: list, features: list, n_users=100):
-        self.n_users = n_users
-        self.clusters = clusters
-        self.features = features
-        self.centers = [cluster.center for cluster in self.clusters]
-        self.std_list = [cluster.std for cluster in self.clusters]
+        self.n_users = n_users # количество генерируемых пользователей
+        self.clusters = clusters # список кластеров
+        self.features = features # список названий признаков центроидов
+        self.centers = [cluster.center for cluster in self.clusters] # список центроидов кластеров
+        self.std_list = [cluster.std for cluster in self.clusters] # список стандартных отклонений кластеров
 
-
+    # генерация синтетических данных (пользователей)
     def generate_data(self):
         X, y = make_blobs(
             n_samples=self.n_users, 
@@ -39,22 +40,27 @@ class UsersGenerator:
             cluster_std=self.std_list, 
             random_state=42
         )
+        # преобразование данных в Датафрейм, сохранение в атрибут data
         self.data = pd.DataFrame(X, columns=self.features)
+        # вставка в Датафрейм колонки с номерами кластеров
         self.data.insert(loc=len(self.data.columns), column='Real_Cluster', value=y)
         return self.data
     
     def get_data(self):
         return self.data
     
+    # обучение алгоритма k-means
     def fit_kmeans(self):
         model_kmeans = KMeans(n_clusters=len(self.centers), random_state=42)
         predicted_clusters = model_kmeans.fit_predict(self.data[self.features])
         self.data['Predicted_Cluster'] = predicted_clusters
         # сопоставление кластеров по номерам
+        # создаем матрицу ошибок
         cm = confusion_matrix(self.data["Real_Cluster"], self.data["Predicted_Cluster"])
+        # задаем соответствие реального и предсказанного кластера по уменьшению ошибок
         row_ind, col_ind = linear_sum_assignment(-cm)
         mapping = dict(zip(col_ind, row_ind))
-        # Переопределяем предсказанные метки
+        # переопределяем предсказанные метки
         self.data["Predicted_Cluster"] = self.data["Predicted_Cluster"].map(mapping)
         # проверяем совпадения
         match_rate = (self.data["Real_Cluster"] == self.data["Predicted_Cluster"]).mean()
@@ -62,40 +68,49 @@ class UsersGenerator:
         centroids = model_kmeans.cluster_centers_
         return centroids
     
+    # функция получения данных из CSV файла
     def get_from_csv(self, filename):
         self.data = pd.read_csv(filename, encoding="utf-8")
         return self.data
 
+    # функция сохранения данных в CSV файл
     def save_csv(self, filename):
         self.data.to_csv(filename, index=False, encoding="utf-8")
 
+    # Генерация избранных фильмов и оценок для пользователя на основе профиля
     def generate_user_activity(self, user_row, movies, n_favorites=None, n_rated=None):
         """
-        Генерация избранных фильмов и оценок для пользователя на основе профиля.
         user_row: строка DataFrame пользователя
         movies: список объектов Movie
         n_favorites: количество избранных
         n_rated: количество оцененных фильмов
         """
-
+        # если не задано количество избранных фильмов пользователя
         if n_favorites is None:
+            # выбираем минимальное среди количества фильмов и значения favorites_count
             n_favorites = int(min(len(movies), user_row.get('favorites_count', 10)))
+        # аналогично с количеством оценок пользователя
         if n_rated is None:
             n_rated = int(min(len(movies), user_row.get('count_ratings', 10)))
 
+        # списки для кортежей (фильм, score)
         favorites_candidates = []
         rated_candidates = []
 
+        # цикл по всем фильмам
         for movie in movies:
+            # получаем список жанров, режиссеров, стран фильма
             movie_genres = [g.name.lower() for g in movie.genre.all()]
             movie_directors = [d.name.lower() for d in movie.director.all()]
             movie_countries = [c.name.lower() for c in movie.country.all()]
+            # получаем год фильма, его продолжительность в минутах, оценку и возврастной рейтинг
             movie_year = movie.year
             movie_runtime = int(movie.runtime.split()[0])
             movie_rating = movie.rating
             movie_age_rating = getattr(movie, 'age_rating', None)
 
             score = 0
+            # добавляем score при совпадении жанра, пользователя и страны с характеристикой пользователя
             if str(user_row['favorite_genre']).lower() in movie_genres:
                 score += 7
             if str(user_row['high_rated_genre']).lower() in movie_genres:
@@ -111,7 +126,7 @@ class UsersGenerator:
                 decade_key = f"decade_count_{decade % 100:02d}"
                 score += user_row.get(decade_key, 0) * 0.7
 
-            # по времени и рейтингу
+            # по времени и рейтингу (чем ближе к значению, тем выше score)
             runtime_diff = abs(user_row.get('avg_runtime', 100) - movie_runtime)
             score += max(0, 5 - runtime_diff/15)
 
@@ -126,10 +141,12 @@ class UsersGenerator:
                 favorites_candidates.append((movie, score))
             rated_candidates.append((movie, score))
 
-        # сортировка
+        # сортировка по убыванию score
+        # добавление n_favorites фильмов в список избранных пользователя
         favorites_candidates.sort(key=lambda x: x[1], reverse=True)
         favorites = [m for m, _ in favorites_candidates[:n_favorites]]
 
+        # выбираем случайные фильмы для оценки
         if len(movies) > n_rated:
             rated = random.sample(rated_candidates, n_rated)
         else:
@@ -148,6 +165,7 @@ class UsersGenerator:
 
         return {"favorites_ids": [m.id for m in favorites], "ratings": ratings}
     
+    # вывод информации о пользователе
     @staticmethod
     def print_user_info(user_info, n=5):
         """
@@ -171,7 +189,9 @@ class UsersGenerator:
             print(f"  Фильм ID {mid}: оценка {r}")
     
 
+# класс Визуализатор
 class Visualizer:
+    # вывод диаграммы реальных кластеров пользователей
     @staticmethod
     def plot_2d(df, x, y, cluster_col, colors=None, title=""):
         plt.figure(figsize=(8,6))
@@ -184,7 +204,8 @@ class Visualizer:
         plt.ylabel(y)
         plt.savefig("users_generated_2d.png", dpi=300, bbox_inches='tight')
         plt.show()
-
+    
+    # вывод диаграммы реальных и предсказанных кластеров пользователей
     @staticmethod
     def compare_real_pred(df, x, y, real_col='Real_Cluster', pred_col='Predicted_Cluster',
                           colors=None, centers=None):
@@ -216,6 +237,7 @@ class Visualizer:
         plt.savefig("users_generated_2d_comparison.png", dpi=300, bbox_inches='tight')
         plt.show()
 
+    # вывод диаграммы реальных кластеров пользователей в трехмерном измерении
     @staticmethod
     def plot_3d(df, x, y, z, cluster_col, colors=None):
         fig = plt.figure(figsize=(8,6))
@@ -230,6 +252,7 @@ class Visualizer:
         plt.savefig("users_generated_3d.png", dpi=300, bbox_inches='tight')
         plt.show()
 
+# функция нормализации данных
 def normalize_data(df, category_maps, numeric_cols, age_rating_col='avg_age_rating'):
     df_norm = df.copy()
 
@@ -251,6 +274,7 @@ def normalize_data(df, category_maps, numeric_cols, age_rating_col='avg_age_rati
     return df_norm
 
 
+# декодирование категориальных признаков
 def decode_categories(df, category_maps):
     decoded = df.copy()
     for col, mapping in category_maps.items():
