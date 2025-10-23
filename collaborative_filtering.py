@@ -43,15 +43,37 @@ class MovieRecommender:
         
         # получаем все избранные фильмы
         all_favorites = Favorite.objects.select_related('movie', 'user').all()
-        
-        # преобразуем оценки в DataFrame
+
         ratings_data = []
+
+        # Создаем множество для быстрой проверки существующих оценок
+        existing_ratings_set = set()
+        
+        # Добавляем реальные оценки
         for rating in all_ratings:
+            user_movie_key = (rating.user_id, rating.movie_id)
+            existing_ratings_set.add(user_movie_key)
             ratings_data.append({
                 'userId': rating.user_id,
                 'movieId': rating.movie_id,
                 'rating': rating.user_rating,
             })
+        
+        # Добавляем избранные как неявные оценки (rating=9)
+        for favorite in all_favorites:
+            user_movie_key = (favorite.user_id, favorite.movie_id)
+            
+            # Быстрая проверка через множество O(1)
+            if user_movie_key not in existing_ratings_set:
+                ratings_data.append({
+                    'userId': favorite.user_id,
+                    'movieId': favorite.movie_id,
+                    'rating': 9,
+                })
+                # Добавляем в множество чтобы избежать дубликатов
+                existing_ratings_set.add(user_movie_key)
+
+        # преобразуем оценки в DataFrame
         ratings_df = pd.DataFrame(ratings_data)
 
         self.n_users = self.map_id_to_index(ratings_df, 'userId', 'userIndex')
@@ -311,7 +333,7 @@ def main():
         precision, recall = recommender.precision_recall_at_k(user_pred, recommender.test_data_matrix)
         print(f'UserToUser Precision = {precision:.2f}. Recall = {recall:.2f}')
         print(f'UserToUser F1-score: {recommender.f1_score(user_pred, recommender.test_data_matrix):.2f}')
-        user_id = User.objects.get(username='user_152_0').id
+        user_id = User.objects.get(username='user_189_2').id
         favorites = Favorite.objects.filter(user_id=user_id).select_related('movie')
         print('Избранные фильмы пользователя')
         for f in favorites:
