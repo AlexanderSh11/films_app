@@ -199,7 +199,7 @@ class UsersGenerator:
             for user_info in user_data:
                 try:
                     # создаем пользователя
-                    username = f"user_{user_info['user_id']}"
+                    username = f"user_{user_info['user_id']}_{user_info['cluster']}"
                     email = f"{username}@example.com"
                     
                     user, created = User.objects.get_or_create(
@@ -413,32 +413,32 @@ def main():
     clusters = [
         Cluster(
             name="Любители супергероев",
-            center=[5, 10, 5, 10, 3, 4, 5, 6, 2, 4, 35, 25, 20, 110, 16],
+            center=[5, 10, 5, 10, 3, 4, 5, 6, 2, 4, 45, 25, 30, 110, 16],
             std=5
         ),
         Cluster(
             name="Любители отечественного кино",
-            center=[45, 35, 45, 70, 4, 5, 6, 5, 1, 0, 25, 20, 15, 90, 12],
+            center=[45, 35, 45, 70, 4, 5, 6, 5, 1, 0, 35, 20, 25, 90, 12],
             std=5
         ),
         Cluster(
             name="Любители аниме",
-            center=[55, 50, 55, 95, 2, 3, 4, 5, 5, 5, 40, 30, 25, 80, 6],
+            center=[55, 50, 55, 95, 2, 3, 4, 5, 5, 5, 50, 30, 35, 80, 6],
             std=5
         ),
         Cluster(
             name="Любители криминала",
-            center=[65, 45, 65, 40, 3, 5, 4, 6, 1, 1, 30, 25, 20, 110, 16],
+            center=[65, 45, 65, 40, 3, 5, 4, 6, 1, 1, 40, 25, 30, 110, 16],
             std=5
         ),
         Cluster(
             name="Любители семейных фильмов",
-            center=[75, 70, 70, 20, 1, 2, 3, 4, 0, 0, 20, 15, 25, 100, 6],
+            center=[75, 70, 70, 20, 1, 2, 3, 4, 0, 0, 30, 15, 35, 100, 6],
             std=5
         ),
         Cluster(
             name="Любители ужасов",
-            center=[85, 75, 80, 20, 2, 3, 4, 5, 1, 1, 30, 20, 20, 90, 18],
+            center=[85, 75, 80, 20, 2, 3, 4, 5, 1, 1, 40, 20, 30, 90, 18],
             std=5
         )
     ]
