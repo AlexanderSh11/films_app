@@ -481,7 +481,7 @@ def main():
         colors=colors
     )
     print("Визуализированы кластеры.")
-    movies = list(Movie.objects.all()[:200])
+    movies = list(Movie.objects.all())
 
     user_data = []
     numeric_cols = [

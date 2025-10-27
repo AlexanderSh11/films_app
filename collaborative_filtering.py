@@ -33,8 +33,13 @@ class MovieRecommender:
         for line in test_data.itertuples():
             self.test_data_matrix[line.userIndex, line.movieIndex] = line.rating
 
-        # считаем косинусное расстояние для пользователей
-        self.user_similarity = pairwise_distances(self.train_data_matrix, metric='cosine')
+        # считаем схожесть через косинусное расстояние для пользователей
+        self.user_similarity = 1 - pairwise_distances(self.train_data_matrix, metric='cosine')
+
+        print(f"Mean similarity: {np.mean(self.user_similarity):.3f}")
+        print(f"Min similarity: {np.min(self.user_similarity):.3f}") 
+        print(f"Max similarity: {np.max(self.user_similarity):.3f}")
+
         return self.user_similarity
 
     def get_data(self):
@@ -80,6 +85,9 @@ class MovieRecommender:
         self.n_movies = self.map_id_to_index(ratings_df, 'movieId', 'movieIndex')
 
         print(f'Total users: {self.n_users}\nTotal movies: {self.n_movies}')
+        print(f"Total ratings: {len(ratings_df)}")
+        print(f"Mean ratings count per user: {len(ratings_df) / self.n_users:.1f}")
+
         return ratings_df
 
     def split_data(self, test_size=0.2):
@@ -118,8 +126,8 @@ class MovieRecommender:
             top_similar_ratings = np.zeros((self.n_users, top, self.n_movies))
 
             for i in range(self.n_users):
-                # сортируем по возрастанию косинусного расстояния
-                top_sim_users = self.user_similarity[i].argsort()[1:top + 1]
+                # сортируем по уменьшению схожести
+                top_sim_users = self.user_similarity[i].argsort()[::-1][1:top + 1]
                 top_similar_ratings[i] = self.train_data_matrix[top_sim_users]
 
             pred = np.zeros((self.n_users, self.n_movies))
@@ -162,7 +170,7 @@ class MovieRecommender:
             for i in range(self.n_users):  # для каждого пользователя
                 # Находим top наиболее похожих пользователей (исключая самого себя)
                 # Используем [1:top+1] чтобы пропустить самого пользователя (схожесть = 1)
-                similar_users_idx = self.user_similarity[i].argsort()[1:top + 1]
+                similar_users_idx = self.user_similarity[i].argsort()[::-1][1:top + 1]
                 
                 # Получаем схожести с этими пользователями
                 similarities = self.user_similarity[i][similar_users_idx]
@@ -309,6 +317,60 @@ class MovieRecommender:
                 continue
         
         return recommendations
+    
+    def compare_predictions_with_actual(self, user_id, pred, n=20):
+        user_index = self.user_to_index.get(user_id)
+        
+        # Получаем реальные оценки пользователя
+        user_ratings = MovieRating.objects.filter(user_id=user_id).select_related('movie')
+        
+        # Создаем словарь: movie_id -> реальная оценка
+        actual_ratings = {}
+        for rating in user_ratings:
+            if rating.movie_id in self.movie_to_index:
+                movie_index = self.movie_to_index[rating.movie_id]
+                actual_ratings[movie_index] = rating.user_rating
+        
+        # Собираем данные для сравнения
+        comparison_data = []
+        
+        for movie_index, actual_rating in actual_ratings.items():
+            predicted_rating = pred[user_index, movie_index]
+            movie_id = self.index_to_movie[movie_index]
+            
+            movie = Movie.objects.get(id=movie_id)
+            comparison_data.append({
+                'movie_id': movie_id,
+                'title': movie.movie_name,
+                'actual_rating': actual_rating,
+                'predicted_rating': round(predicted_rating, 1),
+                'difference': abs(actual_rating - predicted_rating)
+            })
+        
+        # Сортируем по разнице
+        comparison_data.sort(key=lambda x: x['difference'], reverse=False)
+        
+        # Выводим сравнительную таблицу
+        print(f"{'id':<4} {'title':<40} {'actual':<10} {'predicted':<14} {'diff':<8}")
+        if n==None:
+            n = len(comparison_data)
+        for item in comparison_data[:n]:  # Показываем топ-N расхождений
+            diff = item['difference']
+            diff_str = f"{diff:.2f}"
+            print(f"{item['movie_id']:<4} {item['title']:<40} {item['actual_rating']:<10} {item['predicted_rating']:<14} {diff_str:<8}")
+        
+        # Статистика
+        if comparison_data:
+            differences = [item['difference'] for item in comparison_data]
+            avg_diff = np.mean(differences)
+            max_diff = np.max(differences)
+            good_predictions = len([d for d in differences if d <= 1.0])
+            
+            print(f"Mean difference: {avg_diff:.2f}")
+            print(f"Max difference {max_diff:.2f}")
+            print(f"Differences (<1) count: {good_predictions}/{len(comparison_data)} ({good_predictions/len(comparison_data)*100:.1f}%)")
+        
+        return comparison_data
 
 def main():
     user = User.objects.first()
@@ -344,6 +406,8 @@ def main():
             print(f"{r.movie.id}. {r.movie.movie_name} | Оценка: {r.user_rating}")
         print('Рекоммендации пользователя')
         recommender.recommend_movies(user_id, user_pred, n=10, include_ratings=True)
+        print('Сравнение предсказаний с реальными оценками')
+        recommender.compare_predictions_with_actual(user_id, user_pred, n=None)
 
 if __name__ == "__main__":
     main()
