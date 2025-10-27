@@ -24,6 +24,17 @@ class MovieRecommender:
         self.index_to_movie = None
 
     def train(self, verbose=False):
+        # Кешируем обученную модель
+        cache_key = "cf_trained_model"
+        cached_model = cache.get(cache_key)
+        
+        if cached_model:
+            if verbose:
+                print("Используется кешированная модель")
+            # Восстанавливаем состояние из кеша
+            self.__dict__.update(cached_model)
+            return self.user_similarity
+        
         train_data, test_data = self.split_data(test_size=0.2, verbose=verbose)
         self.train_data_matrix = np.zeros((self.n_users, self.n_movies))
         for line in train_data.itertuples():
@@ -40,6 +51,9 @@ class MovieRecommender:
             print(f"Mean similarity: {np.mean(self.user_similarity):.3f}")
             print(f"Min similarity: {np.min(self.user_similarity):.3f}") 
             print(f"Max similarity: {np.max(self.user_similarity):.3f}")
+
+        # Кешируем обученную модель на 1 минуту
+        cache.set(cache_key, self.__dict__, timeout=1*60)
 
         return self.user_similarity
 
