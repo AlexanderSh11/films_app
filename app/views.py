@@ -8,7 +8,8 @@ from django.urls import reverse
 from django.views.generic import TemplateView
 
 from app.forms import RatingForm
-from content_based import MovieRecommender
+from content_based import MovieRecommender as content_based_recommender
+from collaborative_filtering import MovieRecommender as user_to_user_recommender
 from .models import Movie, Favorite, MovieRating
 from django.contrib.auth.models import User
 
@@ -75,16 +76,21 @@ class HomePageView(TemplateView):
             cache.set('movies_by_genre', movies_by_genre, 60*5) # кеширование фильмов по жанрам
 
         user_favorites_ids = []
-        recommendations = []
+        cb_recommendations = []
+        cf_recommendations = []
         if request.user.is_authenticated:
             user_favorites_ids = Favorite.objects.filter(user=request.user).values_list('movie_id', flat=True)
-            recommender = MovieRecommender(request.user)
-            recommendations = recommender.recommend_movies(10)
+            recommender = content_based_recommender(request.user)
+            cb_recommendations = recommender.recommend_movies(10)
+            recommender = user_to_user_recommender()
+            recommender.train()
+            user_pred = recommender.predict_user_based_k_fract_mean(top=10)
+            cf_recommendations = recommender.recommend_movies(request.user.id, user_pred, n=10, include_ratings=True)
 
         context['movies_by_genre'] = dict(movies_by_genre)
         context['user_favorites'] = user_favorites_ids
-        context['recommendations'] = recommendations
-        context['show_recommendations'] = recommendations
+        context['recommendations'] = cb_recommendations
+        context['user_to_user_recommendations'] = cf_recommendations
         return context
 
 

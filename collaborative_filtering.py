@@ -23,8 +23,8 @@ class MovieRecommender:
         self.index_to_user = None
         self.index_to_movie = None
 
-    def train(self):
-        train_data, test_data = self.split_data(test_size=0.2)
+    def train(self, verbose=False):
+        train_data, test_data = self.split_data(test_size=0.2, verbose=verbose)
         self.train_data_matrix = np.zeros((self.n_users, self.n_movies))
         for line in train_data.itertuples():
             self.train_data_matrix[line.userIndex, line.movieIndex] = line.rating
@@ -35,14 +35,15 @@ class MovieRecommender:
 
         # считаем схожесть через косинусное расстояние для пользователей
         self.user_similarity = 1 - pairwise_distances(self.train_data_matrix, metric='cosine')
-
-        print(f"Mean similarity: {np.mean(self.user_similarity):.3f}")
-        print(f"Min similarity: {np.min(self.user_similarity):.3f}") 
-        print(f"Max similarity: {np.max(self.user_similarity):.3f}")
+        
+        if verbose:
+            print(f"Mean similarity: {np.mean(self.user_similarity):.3f}")
+            print(f"Min similarity: {np.min(self.user_similarity):.3f}") 
+            print(f"Max similarity: {np.max(self.user_similarity):.3f}")
 
         return self.user_similarity
 
-    def get_data(self):
+    def get_data(self, verbose=False):
         # получаем все оценки
         all_ratings = MovieRating.objects.select_related('movie', 'user').all()
         
@@ -84,20 +85,21 @@ class MovieRecommender:
         self.n_users = self.map_id_to_index(ratings_df, 'userId', 'userIndex')
         self.n_movies = self.map_id_to_index(ratings_df, 'movieId', 'movieIndex')
 
-        print(f'Total users: {self.n_users}\nTotal movies: {self.n_movies}')
-        print(f"Total ratings: {len(ratings_df)}")
-        print(f"Mean ratings count per user: {len(ratings_df) / self.n_users:.1f}")
+        if verbose:
+            print(f'Total users: {self.n_users}\nTotal movies: {self.n_movies}')
+            print(f"Total ratings: {len(ratings_df)}")
+            print(f"Mean ratings count per user: {len(ratings_df) / self.n_users:.1f}")
 
         return ratings_df
 
-    def split_data(self, test_size=0.2):
-        ratings_df = self.get_data()
+    def split_data(self, test_size=0.2, verbose=False):
+        ratings_df = self.get_data(verbose=verbose)
         # разделяем данные
         train_data, test_data = train_test_split(ratings_df, test_size=test_size, random_state=42)
-
-        print(f'Train shape: {train_data.shape}')
-        print(f'Test shape: {test_data.shape}')
-        print(f'Train data:\n{train_data.head(10)}')
+        if verbose:
+            print(f'Train shape: {train_data.shape}')
+            print(f'Test shape: {test_data.shape}')
+            print(f'Train data:\n{train_data.head(10)}')
         return train_data, test_data
     
     def map_id_to_index(self, df, id_column, index_column):
@@ -264,7 +266,7 @@ class MovieRecommender:
             return 0
         return 2 * (precision * recall) / (precision + recall)
 
-    def recommend_movies(self, user_id, pred, n=10, include_ratings=False):
+    def recommend_movies(self, user_id, pred, n=10, include_ratings=False, verbose=False):
         """
         Получить рекомендуемые фильмы для конкретного пользователя
         user_id: ID пользователя
@@ -308,10 +310,11 @@ class MovieRecommender:
                     'title': movie.movie_name,
                     'predicted_rating': round(predicted_rating, 2)
                 }
-                recommendations.append(recommendation)
-                print(
-                    f"{recommendation['movie_id']:2d}. {recommendation['title']:40} | Оценка: {recommendation['predicted_rating']:.0f}"
-                )
+                recommendations.append(movie)
+                if verbose:
+                    print(
+                        f"{recommendation['movie_id']:2d}. {recommendation['title']:40} | Оценка: {recommendation['predicted_rating']:.0f}"
+                    )
             except Movie.DoesNotExist:
                 print(f"Фильм с ID {movie_id} не найден в базе данных")
                 continue
@@ -376,7 +379,7 @@ def main():
     user = User.objects.first()
     if user:
         recommender = MovieRecommender()
-        recommender.train()
+        recommender.train(verbose=True)
         user_pred = recommender.predict_user_based_naive(top=5)
         print('User similarity matrix:')
         print(recommender.user_similarity)
@@ -405,7 +408,7 @@ def main():
         for r in ratings:
             print(f"{r.movie.id}. {r.movie.movie_name} | Оценка: {r.user_rating}")
         print('Рекоммендации пользователя')
-        recommender.recommend_movies(user_id, user_pred, n=10, include_ratings=True)
+        recommender.recommend_movies(user_id, user_pred, n=10, include_ratings=True, verbose=True)
         print('Сравнение предсказаний с реальными оценками')
         recommender.compare_predictions_with_actual(user_id, user_pred, n=None)
 
