@@ -33,7 +33,6 @@
     position: absolute;
     top: 10px;
     right: 10px;
-    background-color: var(--accent-color);
     color: white;
     width: 40px;
     height: 40px;
@@ -43,6 +42,22 @@
     justify-content: center;
     font-weight: 700;
     font-size: 1rem;
+}
+
+.movie-rating-color {
+    background-color: var(--accent-color);
+}
+
+.movie-user-rating-green-color {
+    background-color: var(--green-color);
+}
+
+.movie-user-rating-yellow-color {
+    background-color: var(--yellow-color);
+}
+
+.movie-user-rating-red-color {
+    background-color: var(--red-color);
 }
 
 .favorite-badge {
@@ -111,7 +126,7 @@
 }
 
 .add-btn {
-    background-color: #327234;
+    background-color: var(--green-color);
     color: white;
 }
 
@@ -120,7 +135,7 @@
 }
 
 .remove-btn {
-    background-color: #b32929;
+    background-color: var(--red-color);
     color: white;
 }
 

@@ -24,7 +24,7 @@
                 <div class="movie-card">
                   <div class="movie-poster-container">
                     <img src="{{ movie.poster_link }}" alt="{{ movie.movie_name }}" class="movie-poster" />
-                    <div class="movie-rating">{{ movie.rating }}</div>
+                    <div class="movie-rating movie-rating-color">{{ movie.rating }}</div>
                   </div>
                   <div class="movie-info">
                     <h3 class="movie-title">{{ movie.movie_name }}</h3>
@@ -84,7 +84,7 @@
                 <div class="movie-card">
                   <div class="movie-poster-container">
                     <img src="{{ movie.poster_link }}" alt="{{ movie.movie_name }}" class="movie-poster" />
-                    <div class="movie-rating">{{ movie.rating }}</div>
+                    <div class="movie-rating movie-rating-color">{{ movie.rating }}</div>
                   </div>
                   <div class="movie-info">
                     <h3 class="movie-title">{{ movie.movie_name }}</h3>
@@ -143,7 +143,7 @@
                 <div class="movie-card">
                   <div class="movie-poster-container">
                     <img src="{{ movie.poster_link }}" alt="{{ movie.movie_name }}" class="movie-poster" />
-                    <div class="movie-rating">{{ movie.rating }}</div>
+                    <div class="movie-rating movie-rating-color">{{ movie.rating }}</div>
                     {% if movie.id in user_favorites %}
                       <div class="favorite-badge">
                         <svg width="24" height="24" viewBox="0 0 24 24">

@@ -1,4 +1,4 @@
-.favorites-section {
+.user-content-section {
     max-width: 1400px;
     margin: 2rem auto;
     padding: 0 2rem;
@@ -20,7 +20,7 @@
     font-size: 1.1rem;
 }
 
-.empty-favorites {
+.empty-user-content {
     text-align: center;
     padding: 3rem 0;
     background-color: var(--card-bg);
@@ -32,13 +32,13 @@
     margin-bottom: 1.5rem;
 }
 
-.empty-favorites h3 {
+.empty-user-content h3 {
     font-size: 1.5rem;
     margin-bottom: 0.5rem;
     color: var(--text-color);
 }
 
-.empty-favorites p {
+.empty-user-content p {
     color: var(--text-secondary);
     margin-bottom: 1.5rem;
     max-width: 500px;
@@ -61,7 +61,7 @@
     background-color: #d13354;
 }
 
-.favorites-grid {
+.user-content-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 1.5rem;
