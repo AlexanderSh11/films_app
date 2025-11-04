@@ -51,12 +51,11 @@
                                     <option value="Детектив" {% if selected_genre == "Детектив" %}selected{% endif %}>Детектив</option>
                                     <option value="Семейный" {% if selected_genre == "Семейный" %}selected{% endif %}>Семейный</option>
                                     <option value="Фэнтези" {% if selected_genre == "Фэнтези" %}selected{% endif %}>Фэнтези</option>
-                                    <option value="Фильм-нуар" {% if selected_genre == "Фильм-нуар" %}selected{% endif %}>Фильм-нуар</option>
                                     <option value="Хоррор" {% if selected_genre == "Хоррор" %}selected{% endif %}>Хоррор</option>
                                     <option value="История" {% if selected_genre == "История" %}selected{% endif %}>История</option>
                                     <option value="Музыка" {% if selected_genre == "Музыка" %}selected{% endif %}>Музыка</option>
+                                    <option value="Мультфильм" {% if selected_genre == "Мультфильм" %}selected{% endif %}>Музыка</option>
                                     <option value="Мюзикл" {% if selected_genre == "Мюзикл" %}selected{% endif %}>Мюзикл</option>
-                                    <option value="Мистика" {% if selected_genre == "Мистика" %}selected{% endif %}>Мистика</option>
                                     <option value="Мелодрама" {% if selected_genre == "Мелодрама" %}selected{% endif %}>Мелодрама</option>
                                     <option value="Фантастика" {% if selected_genre == "Фантастика" %}selected{% endif %}>Фантастика</option>
                                     <option value="Спорт" {% if selected_genre == "Спорт" %}selected{% endif %}>Спорт</option>
@@ -88,7 +87,7 @@
                     <div class="movie-card">
                         <div class="movie-poster-container">
                             <img src="{{ movie.poster_link }}" alt="{{ movie.movie_name }}" class="movie-poster">
-                            <div class="movie-rating">{{ movie.rating }}</div>
+                            <div class="movie-rating movie-rating-color">{{ movie.rating }}</div>
                             {% if movie.id in user_favorites %}
                             <div class="favorite-badge">
                                 <svg width="24" height="24" viewBox="0 0 24 24">

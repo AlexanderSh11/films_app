@@ -125,6 +125,14 @@ def favorites(request, user_id):
 
 
 @login_required
+def ratings(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    user_favorites_ids = Favorite.objects.filter(user=user).values_list('movie_id', flat=True)
+    ratings = MovieRating.objects.filter(user=user).order_by('-user_rating')
+    return render(request, 'ratings.html', {'user': user, 'ratings': ratings, 'user_favorites_ids': user_favorites_ids})
+
+
+@login_required
 def add_to_favorites(request, movie_id):
     movie = get_object_or_404(Movie, id=movie_id)
     Favorite.objects.get_or_create(user=request.user, movie=movie)
