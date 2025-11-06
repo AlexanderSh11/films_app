@@ -246,6 +246,66 @@ class UsersGenerator:
 
 # класс Визуализатор
 class Visualizer:
+    # визуализация метода "локтя" для определения оптимального количества кластеров
+    @staticmethod
+    def elbow_method(data_X):
+        wcss = []
+        for i in range(1, 11):
+            model = KMeans(n_clusters=i, random_state=0, n_init="auto")
+            model.fit(data_X)
+            wcss.append(model.inertia_)
+
+        plt.plot(range(1, 11), wcss)
+        plt.title('Метод локтя (Elbow Method)')
+        plt.xlabel('k - количество кластеров')
+        plt.ylabel('WCSS')
+        plt.grid()
+        plt.savefig("elbow_method.png", dpi=300, bbox_inches='tight')
+        plt.show()
+
+    # оценка по индексу Дэвиса-Булдина
+    @staticmethod
+    def davies_bouldin_score_method(data_X):
+        from sklearn.metrics import davies_bouldin_score
+
+        results = {}
+
+        for i in range(2,11):
+            model = KMeans(n_clusters=i, random_state=0, n_init="auto")
+            model.fit(data_X)
+            predicted_clusters = model.fit_predict(data_X)
+            db_index = davies_bouldin_score(data_X, predicted_clusters)
+            print(f"Индекс Дэвиса-Булдина для k = {i}: {db_index}")
+            results.update({i: db_index})
+
+        plt.plot(list(results.keys()), list(results.values()))
+        plt.xlabel("k - количество кластеров")
+        plt.ylabel("Индекс Дэвиса-Булдина (Davies-Boulding Index)")
+        plt.grid()
+        plt.savefig("davies_bouldin_score.png", dpi=300, bbox_inches='tight')
+        plt.show()
+
+    # оценка по силуэтному анализу
+    @staticmethod
+    def silhouette_score_method(data_X):
+        from sklearn.metrics import silhouette_score
+
+        results = {}
+
+        for i in range(2,11):
+            model = KMeans(n_clusters=i, random_state=0, n_init="auto")
+            predicted_clusters = model.fit_predict(data_X)
+            sil_score = silhouette_score(data_X, predicted_clusters)
+            print(f"Силуэтный коэффициент для k = {i}: {sil_score:.3f}")
+            results.update({i: sil_score})
+
+        plt.plot(list(results.keys()), list(results.values()))
+        plt.xlabel("k - количество кластеров")
+        plt.ylabel("Силуэтный коэффициент (Silhouette Score)")
+        plt.grid()
+        plt.savefig("silhouette_score.png", dpi=300, bbox_inches='tight')
+        plt.show()
+
     # вывод диаграммы реальных кластеров пользователей
     @staticmethod
     def plot_2d(df, x, y, cluster_col, colors=None, title=""):
@@ -413,33 +473,33 @@ def main():
     clusters = [
         Cluster(
             name="Любители супергероев",
-            center=[5, 10, 5, 10, 3, 4, 5, 6, 2, 4, 45, 25, 30, 110, 16],
-            std=5
+            center=[5, 15, 8, 15, 1, 2, 3, 15, 25, 35, 40, 30, 35, 125, 12],
+            std=4
         ),
         Cluster(
             name="Любители отечественного кино",
-            center=[45, 35, 45, 70, 4, 5, 6, 5, 1, 0, 35, 20, 25, 90, 12],
-            std=5
+            center=[45, 75, 45, 75, 5, 8, 12, 8, 4, 2, 25, 15, 20, 95, 12],
+            std=4
         ),
         Cluster(
             name="Любители аниме",
-            center=[55, 50, 55, 95, 2, 3, 4, 5, 5, 5, 50, 30, 35, 80, 6],
-            std=5
+            center=[55, 45, 35, 92, 0, 1, 2, 8, 15, 25, 35, 25, 30, 85, 6],
+            std=3
         ),
         Cluster(
             name="Любители криминала",
-            center=[65, 45, 65, 40, 3, 5, 4, 6, 1, 1, 40, 25, 30, 110, 16],
-            std=5
+            center=[65, 55, 55, 35, 3, 5, 8, 12, 8, 4, 35, 22, 28, 115, 16],
+            std=4
         ),
         Cluster(
             name="Любители семейных фильмов",
-            center=[75, 70, 70, 20, 1, 2, 3, 4, 0, 0, 30, 15, 35, 100, 6],
-            std=5
+            center=[75, 85, 65, 25, 2, 4, 6, 10, 12, 6, 20, 12, 18, 105, 6],
+            std=3
         ),
         Cluster(
             name="Любители ужасов",
-            center=[85, 75, 80, 20, 2, 3, 4, 5, 1, 1, 40, 20, 30, 90, 18],
-            std=5
+            center=[85, 65, 75, 20, 1, 2, 4, 6, 8, 12, 30, 18, 25, 95, 18],
+            std=4
         )
     ]
     features = [
@@ -452,6 +512,10 @@ def main():
     generator = UsersGenerator(clusters=clusters, n_users=1000, features=features)
     data = generator.generate_data()
     print("Сгенерированы пользователи.")
+    print("Определение оптимального числа кластеров.")
+    Visualizer.elbow_method(data_X=data[generator.features])
+    Visualizer.davies_bouldin_score_method(data_X=data[generator.features])
+    Visualizer.silhouette_score_method(data_X=data[generator.features])
     centroids = generator.fit_kmeans()
 
     # подготовим цвета по кластерам
@@ -481,30 +545,30 @@ def main():
         colors=colors
     )
     print("Визуализированы кластеры.")
-    movies = list(Movie.objects.all())
+    # movies = list(Movie.objects.all())
 
-    user_data = []
-    numeric_cols = [
-        'decade_count_70', 'decade_count_80', 'decade_count_90', 'decade_count_00', 'decade_count_10', 'decade_count_20',
-        'count_ratings', 'max_rating_count', 'favorites_count', 'avg_runtime', 'avg_age_rating'
-    ]
-    data = normalize_data(data, category_maps, numeric_cols)
-    for idx, row in data.iterrows():
-        activity = generator.generate_user_activity(row, movies)
-        user_data.append({
-            "user_id": idx + 1,
-            "cluster": row["Real_Cluster"],
-            "profile": row.to_dict(),
-            "favorites": activity["favorites_ids"],
-            "ratings": activity["ratings"]
-        })
-        if idx % 10 == 0:
-            print(f"Сгенерировано оценок и избранных фильмов для {idx+1} пользователей.")
-        if idx >= N_users:
-            break
+    # user_data = []
+    # numeric_cols = [
+    #     'decade_count_70', 'decade_count_80', 'decade_count_90', 'decade_count_00', 'decade_count_10', 'decade_count_20',
+    #     'count_ratings', 'max_rating_count', 'favorites_count', 'avg_runtime', 'avg_age_rating'
+    # ]
+    # data = normalize_data(data, category_maps, numeric_cols)
+    # for idx, row in data.iterrows():
+    #     activity = generator.generate_user_activity(row, movies)
+    #     user_data.append({
+    #         "user_id": idx + 1,
+    #         "cluster": row["Real_Cluster"],
+    #         "profile": row.to_dict(),
+    #         "favorites": activity["favorites_ids"],
+    #         "ratings": activity["ratings"]
+    #     })
+    #     if idx % 10 == 0:
+    #         print(f"Сгенерировано оценок и избранных фильмов для {idx+1} пользователей.")
+    #     if idx >= N_users:
+    #         break
 
-    generator.print_user_info(user_data[-1])
-    generator.save_data_to_db(user_data)
+    # generator.print_user_info(user_data[-1])
+    # generator.save_data_to_db(user_data)
 
 if __name__ == "__main__":
     main()
