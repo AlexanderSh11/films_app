@@ -545,30 +545,30 @@ def main():
         colors=colors
     )
     print("Визуализированы кластеры.")
-    # movies = list(Movie.objects.all())
+    movies = list(Movie.objects.all())
 
-    # user_data = []
-    # numeric_cols = [
-    #     'decade_count_70', 'decade_count_80', 'decade_count_90', 'decade_count_00', 'decade_count_10', 'decade_count_20',
-    #     'count_ratings', 'max_rating_count', 'favorites_count', 'avg_runtime', 'avg_age_rating'
-    # ]
-    # data = normalize_data(data, category_maps, numeric_cols)
-    # for idx, row in data.iterrows():
-    #     activity = generator.generate_user_activity(row, movies)
-    #     user_data.append({
-    #         "user_id": idx + 1,
-    #         "cluster": row["Real_Cluster"],
-    #         "profile": row.to_dict(),
-    #         "favorites": activity["favorites_ids"],
-    #         "ratings": activity["ratings"]
-    #     })
-    #     if idx % 10 == 0:
-    #         print(f"Сгенерировано оценок и избранных фильмов для {idx+1} пользователей.")
-    #     if idx >= N_users:
-    #         break
+    user_data = []
+    numeric_cols = [
+        'decade_count_70', 'decade_count_80', 'decade_count_90', 'decade_count_00', 'decade_count_10', 'decade_count_20',
+        'count_ratings', 'max_rating_count', 'favorites_count', 'avg_runtime', 'avg_age_rating'
+    ]
+    data = normalize_data(data, category_maps, numeric_cols)
+    for idx, row in data.iterrows():
+        activity = generator.generate_user_activity(row, movies)
+        user_data.append({
+            "user_id": idx + 1,
+            "cluster": row["Real_Cluster"],
+            "profile": row.to_dict(),
+            "favorites": activity["favorites_ids"],
+            "ratings": activity["ratings"]
+        })
+        if idx % 10 == 0:
+            print(f"Сгенерировано оценок и избранных фильмов для {idx+1} пользователей.")
+        if idx >= N_users:
+            break
 
-    # generator.print_user_info(user_data[-1])
-    # generator.save_data_to_db(user_data)
+    generator.print_user_info(user_data[-1])
+    generator.save_data_to_db(user_data)
 
 if __name__ == "__main__":
     main()
