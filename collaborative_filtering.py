@@ -390,41 +390,48 @@ class MovieRecommender:
         return comparison_data
 
 def main():
-    user = User.objects.first()
-    if user:
-        recommender = MovieRecommender()
-        recommender.train(verbose=True)
-        user_pred = recommender.predict_user_based_naive(top=5)
-        print('User similarity matrix:')
-        print(recommender.user_similarity)
-        if isinstance(user_pred, bool):
-            return
-        print('UserToUser RMSE:', recommender.rmse(user_pred, recommender.test_data_matrix))
-        precision, recall = recommender.precision_recall_at_k(user_pred, recommender.test_data_matrix)
-        print(f'UserToUser Precision = {precision:.2f}. Recall = {recall:.2f}')
-        print(f'UserToUser F1-score: {recommender.f1_score(user_pred, recommender.test_data_matrix):.2f}')
-        user_pred = recommender.predict_user_based_k_fract_mean(top=5)
-        print('User similarity matrix:')
-        print(recommender.user_similarity)
-        if isinstance(user_pred, bool):
-            return
-        print('UserToUser RMSE:', recommender.rmse(user_pred, recommender.test_data_matrix))
-        precision, recall = recommender.precision_recall_at_k(user_pred, recommender.test_data_matrix)
-        print(f'UserToUser Precision = {precision:.2f}. Recall = {recall:.2f}')
-        print(f'UserToUser F1-score: {recommender.f1_score(user_pred, recommender.test_data_matrix):.2f}')
-        user_id = User.objects.get(username='user_189_2').id
-        favorites = Favorite.objects.filter(user_id=user_id).select_related('movie')
-        print('Избранные фильмы пользователя')
-        for f in favorites:
-            print(f"{f.movie.id}. {f.movie.movie_name}")
-        ratings = MovieRating.objects.filter(user_id=user_id).select_related('movie').order_by('-user_rating')
-        print('Оценки пользователя')
-        for r in ratings:
-            print(f"{r.movie.id}. {r.movie.movie_name} | Оценка: {r.user_rating}")
-        print('Рекоммендации пользователя')
-        recommender.recommend_movies(user_id, user_pred, n=10, include_ratings=True, verbose=True)
-        print('Сравнение предсказаний с реальными оценками')
-        recommender.compare_predictions_with_actual(user_id, user_pred, n=None)
+    user_id = User.objects.get(username='user_189_2').id
+    print('Информация о пользователе с id =', user_id)
+    favorites = Favorite.objects.filter(user_id=user_id).select_related('movie')
+    print('Избранные фильмы пользователя')
+    for f in favorites:
+        print(f"{f.movie.id}. {f.movie.movie_name}")
+    ratings = MovieRating.objects.filter(user_id=user_id).select_related('movie').order_by('-user_rating')
+    print('Оценки пользователя')
+    for r in ratings:
+        print(f"{r.movie.id}. {r.movie.movie_name} | Оценка: {r.user_rating}")
+
+    print('\nОбучение модели')
+    recommender = MovieRecommender()
+    recommender.train(verbose=True)
+    print('User similarity matrix:')
+    print(recommender.user_similarity)
+
+    print('\nНаивное предсказание оценок')
+    user_pred = recommender.predict_user_based_naive(top=5)
+    if isinstance(user_pred, bool):
+        return
+    print('UserToUser RMSE:', recommender.rmse(user_pred, recommender.test_data_matrix))
+    precision, recall = recommender.precision_recall_at_k(user_pred, recommender.test_data_matrix)
+    print(f'UserToUser Precision = {precision:.2f}. Recall = {recall:.2f}')
+    print(f'UserToUser F1-score: {recommender.f1_score(user_pred, recommender.test_data_matrix):.2f}')
+    print('Рекоммендации пользователя')
+    recommender.recommend_movies(user_id, user_pred, n=10, include_ratings=True, verbose=True)
+    print('Сравнение предсказаний с реальными оценками')
+    recommender.compare_predictions_with_actual(user_id, user_pred, n=None)
+
+    print('\nПредсказание оценок с учетом взвешенного среднего и нормализации оценок')
+    user_pred = recommender.predict_user_based_k_fract_mean(top=5)
+    if isinstance(user_pred, bool):
+        return
+    print('UserToUser RMSE:', recommender.rmse(user_pred, recommender.test_data_matrix))
+    precision, recall = recommender.precision_recall_at_k(user_pred, recommender.test_data_matrix)
+    print(f'UserToUser Precision = {precision:.2f}. Recall = {recall:.2f}')
+    print(f'UserToUser F1-score: {recommender.f1_score(user_pred, recommender.test_data_matrix):.2f}')
+    print('Рекоммендации пользователя')
+    recommender.recommend_movies(user_id, user_pred, n=10, include_ratings=True, verbose=True)
+    print('Сравнение предсказаний с реальными оценками')
+    recommender.compare_predictions_with_actual(user_id, user_pred, n=None)
 
 if __name__ == "__main__":
     main()
