@@ -112,11 +112,11 @@ class UsersGenerator:
             score = 0
             # добавляем score при совпадении жанра, пользователя и страны с характеристикой пользователя
             if str(user_row['favorite_genre']).lower() in movie_genres:
-                score += 7
-            if str(user_row['high_rated_genre']).lower() in movie_genres:
-                score += 5
-            if str(user_row['favorite_director']).lower() in movie_directors:
                 score += 10
+            if str(user_row['high_rated_genre']).lower() in movie_genres:
+                score += 8
+            if str(user_row['favorite_director']).lower() in movie_directors:
+                score += 15
             if str(user_row['favorite_country']).lower() in movie_countries:
                 score += 3
 
@@ -124,7 +124,7 @@ class UsersGenerator:
             if movie_year >= 1970:
                 decade = (movie_year // 10) * 10
                 decade_key = f"decade_count_{decade % 100:02d}"
-                score += user_row.get(decade_key, 0) * 0.7
+                score += user_row.get(decade_key, 0) * 0.3
 
             # по времени и рейтингу (чем ближе к значению, тем выше score)
             runtime_diff = abs(user_row.get('avg_runtime', 100) - movie_runtime)
