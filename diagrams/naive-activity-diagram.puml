@@ -1,0 +1,26 @@
+@startuml diagram
+title Алгоритм функции predict_user_based_naive
+
+start
+
+:Создание трёхмерного массива top_similar_ratings[n_users × top × n_movies];
+
+repeat
+  :Для пользователя i от 0 до n_users;
+  :Сортировка всех пользователей по убыванию схожести с пользователем i;
+  :Выбор top наиболее похожих пользователей (без самого i);
+  :Извлечение их оценок фильмов из train_data_matrix;
+  :Сохранение оценок в top_similar_ratings[i];
+repeat while (i < n_users)
+
+:Создание нулевой матрицы предсказаний pred[n_users × n_movies];
+
+repeat
+  :Для пользователя i от 0 до n_users;
+  :Вычисление средней оценки фильмов:\n pred[i] = сумма оценок фильма от top похожих на i пользователей / top;
+repeat while (i < n_users)
+
+:Возврат предсказанных оценок pred;
+
+stop
+@enduml
