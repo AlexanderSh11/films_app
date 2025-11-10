@@ -408,7 +408,7 @@ def main():
     print(recommender.user_similarity)
 
     print('\nНаивное предсказание оценок')
-    user_pred = recommender.predict_user_based_naive(top=5)
+    user_pred = recommender.predict_user_based_naive(top=100)
     if isinstance(user_pred, bool):
         return
     print('UserToUser RMSE:', recommender.rmse(user_pred, recommender.test_data_matrix))
@@ -421,7 +421,7 @@ def main():
     recommender.compare_predictions_with_actual(user_id, user_pred, n=None)
 
     print('\nПредсказание оценок с учетом взвешенного среднего и нормализации оценок')
-    user_pred = recommender.predict_user_based_k_fract_mean(top=5)
+    user_pred = recommender.predict_user_based_k_fract_mean(top=100)
     if isinstance(user_pred, bool):
         return
     print('UserToUser RMSE:', recommender.rmse(user_pred, recommender.test_data_matrix))
