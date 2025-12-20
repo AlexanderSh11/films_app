@@ -1,5 +1,9 @@
 .auth-main {
     margin: 2rem;
+    min-height: 54vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .auth-form {
@@ -24,6 +28,7 @@
     transition: background-color 0.3s;
     margin-top: 0.5rem;
     width: 15rem;
+    align-self: center;
 }
 
 .auth-btn:hover {
