@@ -25,9 +25,108 @@
     color: var(--yellow-color);
 }
 
+.carousel-container {
+    position: relative;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 40px;
+}
+
 .movie-scroll-container {
     overflow-x: auto;
     padding-bottom: 1rem;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scroll-behavior: smooth;
+}
+
+.movie-scroll-container::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 100px;
+    background: rgba(0, 35, 69, 0.7);
+    border: none;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    opacity: 0;
+    visibility: hidden;
+    border-radius: 8px;
+}
+
+.carousel-btn-left {
+    left: 0;
+}
+
+.carousel-btn-right {
+    right: 0;
+}
+
+.carousel-btn svg {
+    width: 32px;
+    height: 32px;
+    fill: var(--text-color1);
+    transition: fill 0.3s ease;
+}
+
+.carousel-container:hover .carousel-btn {
+    opacity: 1;
+    visibility: visible;
+}
+
+.carousel-btn:hover {
+    width: 60px;
+}
+
+.carousel-btn-left:hover {
+    left: -30px;
+}
+
+.carousel-btn-right:hover {
+    right: -30px;
+}
+
+.carousel-btn:hover svg {
+    fill: var(--accent-color);
+}
+
+/* Градиентные эффекты по краям контейнера */
+.movie-scroll-container::before,
+.movie-scroll-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 60px;
+    pointer-events: none;
+    z-index: 5;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 4px;
+}
+
+.movie-scroll-container::before {
+    left: 0;
+    background: linear-gradient(90deg, rgba(0, 35, 69, 0.9) 0%, rgba(0, 35, 69, 0) 100%);
+}
+
+.movie-scroll-container::after {
+    right: 0;
+    background: linear-gradient(270deg, rgba(0, 35, 69, 0.9) 0%, rgba(0, 35, 69, 0) 100%);
+}
+
+.carousel-container:hover .movie-scroll-container::before,
+.carousel-container:hover .movie-scroll-container::after {
+    opacity: 1;
 }
 
 .movie-row {
