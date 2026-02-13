@@ -62,7 +62,7 @@ class HomePageView(TemplateView):
         context = super().get_context_data(**kwargs)
         request = self.request
 
-        movies = Movie.objects.prefetch_related('genre').all()
+        movies = Movie.objects.prefetch_related('genre').all().order_by('-rating')
 
         cached = cache.get('movies_by_genre')
         if cached:
