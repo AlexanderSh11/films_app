@@ -137,3 +137,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
+
+MEDIA_URL = '/posters/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

@@ -40,7 +40,11 @@
             {% for rating in ratings %}
               <div class="movie-card">
                 <div class="movie-poster-container">
-                  <img src="{{ rating.movie.poster_link }}" alt="{{ rating.movie.movie_name }}" class="movie-poster" />
+                  {% if rating.movie.local_poster %}
+                    <img src="{{ rating.movie.poster_display_url }}" alt="{{ rating.movie.movie_name }}" class="movie-poster"/>
+                  {% else %}
+                    <img src="{{ rating.movie.poster_link }}" alt="{{ rating.movie.movie_name }}" class="movie-poster"/>
+                  {% endif %}
                   <div class="movie-rating
                     {% if rating.user_rating >= 7 %}movie-user-rating-green-color
                     {% elif rating.user_rating >= 4 %}movie-user-rating-yellow-color

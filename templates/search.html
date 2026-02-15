@@ -86,7 +86,11 @@
                     {% for movie in movies %}
                     <div class="movie-card">
                         <div class="movie-poster-container">
-                            <img src="{{ movie.poster_link }}" alt="{{ movie.movie_name }}" class="movie-poster">
+                            {% if movie.local_poster %}
+                                <img src="{{ movie.poster_display_url }}" alt="{{ movie.movie_name }}" class="movie-poster"/>
+                            {% else %}
+                                <img src="{{ movie.poster_link }}" alt="{{ movie.movie_name }}" class="movie-poster"/>
+                            {% endif %}
                             <div class="movie-rating movie-rating-color">{{ movie.rating }}</div>
                             {% if movie.id in user_favorites %}
                             <div class="favorite-badge">

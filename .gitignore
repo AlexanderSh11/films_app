@@ -3,9 +3,12 @@ __pycache__/
 *.pyo
 *.pyd
 
+media/
+
 migrate.py
 imdb_top_1000.csv
 movies.csv
 db.sqlite3
 get_movies_api.py
+convert_webp_to_jpg.py
 users_clasters_generating.py
