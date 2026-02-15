@@ -74,7 +74,13 @@ class HomePageView(TemplateView):
                     if len(movies_by_genre[g.name]) < 10:
                         movies_by_genre[g.name].append(movie)
             cache.set('movies_by_genre', movies_by_genre, 60*5) # кеширование фильмов по жанрам
-
+        sorted_movies_by_genre = dict(
+            sorted(
+                movies_by_genre.items(), 
+                key=lambda item: len(item[1]), 
+                reverse=True
+            )
+        )
         user_favorites_ids = []
         cb_recommendations = []
         cf_recommendations = []
@@ -87,7 +93,7 @@ class HomePageView(TemplateView):
             user_pred = recommender.predict_user_based_k_fract_mean(top=10)
             cf_recommendations = recommender.recommend_movies(request.user.id, user_pred, n=10, include_ratings=True)
 
-        context['movies_by_genre'] = dict(movies_by_genre)
+        context['movies_by_genre'] = sorted_movies_by_genre
         context['user_favorites'] = user_favorites_ids
         context['recommendations'] = cb_recommendations
         context['user_to_user_recommendations'] = cf_recommendations
