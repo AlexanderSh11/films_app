@@ -172,7 +172,11 @@
 
         {% for genre, movies in movies_by_genre.items %}
         <section class="movie-section">
-            <h2 class="section-title">{{ genre }}</h2>
+            <h2 class="section-title">
+                <a href="{% url 'search' %}?genre={{ genre|urlencode }}" class="genre-section-link">
+                    {{ genre }}
+                </a>
+            </h2>
             <div class="carousel-container">
                 <button class="carousel-btn carousel-btn-left" aria-label="Прокрутить влево">
                     <svg width="24" height="24" viewBox="0 0 24 24">
