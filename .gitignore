@@ -5,6 +5,7 @@ __pycache__/
 
 media/
 
+myapp/settings.py
 migrate.py
 imdb_top_1000.csv
 movies.csv
