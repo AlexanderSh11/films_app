@@ -15,3 +15,6 @@ get_posters.py
 convert_webp_to_jpg.py
 
 users_clasters_generating.py
+
+movie_ids.npy
+movie_index.faiss
