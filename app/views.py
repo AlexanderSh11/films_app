@@ -13,6 +13,8 @@ from collaborative_filtering import MovieRecommender as user_to_user_recommender
 from .models import Movie, Favorite, MovieRating
 from django.contrib.auth.models import User
 
+from movie_searcher import search_movies
+
 
 class SearchPageView(TemplateView):
     template_name = 'search.html'
@@ -23,26 +25,63 @@ class SearchPageView(TemplateView):
         genre = request.GET.get('genre', 'Все')
         title = request.GET.get('title', '')
         sort = request.GET.get('sort', 'newest')
+        semantic_query = request.GET.get('semantic', '')
 
         movies = Movie.objects.prefetch_related('genre').all()
 
-        if genre != 'Все':
-            movies = movies.filter(genre__name__icontains=genre)
+        # Если есть семантический запрос - игнорируем title и sort
+        if semantic_query:
+            # Учитываем только жанр
+            if genre != 'Все':
+                movies = movies.filter(genre__name__icontains=genre)
+            
+            # Получаем ID фильмов с учетом жанра
+            filtered_movie_ids = list(movies.values_list('id', flat=True))
+            
+            if filtered_movie_ids:
+                # Ищем среди отфильтрованных по жанру фильмов
+                semantic_results, scores = search_movies(
+                    query=semantic_query,
+                    movie_ids=filtered_movie_ids,
+                    top_k=20
+                )
+                
+                result_ids = [movie.id for movie in semantic_results]
+                
+                # Получаем фильмы в порядке релевантности
+                movies = Movie.objects.filter(id__in=result_ids).prefetch_related('genre', 'director', 'country')
+                
+                # Сортируем по порядку из результатов поиска
+                movie_dict = {movie.id: movie for movie in movies}
+                ordered_movies = []
+                for mid in result_ids:
+                    if mid in movie_dict:
+                        ordered_movies.append(movie_dict[mid])
+                movies = ordered_movies
+            else:
+                movies = []
+        
+        else:
+            # Обычный поиск без семантики
+            if genre != 'Все':
+                movies = movies.filter(genre__name__icontains=genre)
 
-        if title:
-            movies = movies.filter(movie_name__icontains=title)
+            if title:
+                movies = movies.filter(movie_name__icontains=title)
 
-        # Сортировка
-        if sort == 'названию':
-            movies = movies.order_by('movie_name', 'year')
-        elif sort == 'рейтингу (сначала лучшие)':
-            movies = movies.filter(rating__isnull=False).order_by('-rating')
-        elif sort == 'рейтингу (сначала худшие)':
-            movies = movies.filter(rating__isnull=False).order_by('rating')
-        elif sort == 'году выхода (сначала новые)':
-            movies = movies.order_by('-year', 'movie_name')
-        elif sort == 'году выхода (сначала старые)':
-            movies = movies.order_by('year', 'movie_name')
+            # Сортировка
+            if sort == 'названию':
+                movies = movies.order_by('movie_name', 'year')
+            elif sort == 'рейтингу (сначала лучшие)':
+                movies = movies.filter(rating__isnull=False).order_by('-rating')
+            elif sort == 'рейтингу (сначала худшие)':
+                movies = movies.filter(rating__isnull=False).order_by('rating')
+            elif sort == 'году выхода (сначала новые)':
+                movies = movies.order_by('-year', 'movie_name')
+            elif sort == 'году выхода (сначала старые)':
+                movies = movies.order_by('year', 'movie_name')
+            
+            movies = movies[:100]
 
         user_favorites_ids = []
         if request.user.is_authenticated:
@@ -50,7 +89,8 @@ class SearchPageView(TemplateView):
 
         context['selected_genre'] = genre
         context['selected_sort'] = sort
-        context['movies'] = movies[:100]
+        context['semantic_query'] = semantic_query
+        context['movies'] = movies
         context['user_favorites'] = user_favorites_ids
         return context
 

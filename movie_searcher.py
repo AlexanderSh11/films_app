@@ -3,14 +3,29 @@ import django
 import sys
 from pathlib import Path
 
-# Настройка Django окружения
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myapp.settings")
-django.setup()
-
-from app.models import Movie, AGE_RATINGS
 from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
+
+# Глобальные переменные для кэширования
+_MODEL = None
+_INDEX = None
+_ALL_MOVIE_IDS = None
+
+def load_model_and_index():
+    """Загружает модель и индекс при первом вызове"""
+    global _MODEL, _INDEX, _ALL_MOVIE_IDS
+    
+    if _MODEL is None:
+        _MODEL = SentenceTransformer('cointegrated/rubert-tiny2')
+    
+    if _INDEX is None:
+        index_path = 'movie_index.faiss'
+        ids_path = 'movie_ids.npy'
+        
+        if os.path.exists(index_path) and os.path.exists(ids_path):
+            _INDEX = faiss.read_index(index_path)
+            _ALL_MOVIE_IDS = np.load(ids_path)
 
 def get_movie_text_representation(movie):
     """Преобразует объект фильма в текстовую строку для создания эмбеддингов"""
@@ -44,13 +59,70 @@ def get_movie_text_representation(movie):
         parts.append(f"meta_score: {movie.meta_score}")
     
     if movie.age_rating is not None:
-        age_text = dict(AGE_RATINGS).get(movie.age_rating, f"{movie.age_rating}+")
-        parts.append(f"возрастное ограничение: {age_text}")
+        parts.append(f"возрастное ограничение: {movie.age_rating}+")
     
     return ". ".join(parts)
 
+def search_movies(query, top_k=5, movie_ids=None):
+    """Ищет фильмы по запросу"""
+    from app.models import Movie
+    # Загружаем модель и индекс (если ещё не загружены)
+    load_model_and_index()
+    
+    # Создаем эмбеддинг из запроса
+    query_embedding = _MODEL.encode([query], convert_to_numpy=True)
+    
+    # Если передан список конкретных ID для поиска
+    if movie_ids is not None:
+        # Получаем фильмы из БД для указанных ID
+        movies_subset = Movie.objects.filter(id__in=movie_ids).prefetch_related('genre', 'director', 'country')
+        
+        if not movies_subset:
+            return [], []
+        
+        # Создаем тексты и эмбеддинги для подмножества
+        movie_texts = [get_movie_text_representation(m) for m in movies_subset]
+        embeddings = _MODEL.encode(movie_texts, convert_to_numpy=True, show_progress_bar=False)
+        
+        # Создаем временный индекс
+        temp_index = faiss.IndexFlatL2(embeddings.shape[1])
+        temp_index.add(embeddings)
+        
+        # Ищем
+        distances, indices = temp_index.search(query_embedding, min(top_k, len(movies_subset)))
+        
+        # Получаем результаты
+        movies_list = list(movies_subset)
+        result_ids = [movies_list[i].id for i in indices[0]]
+        
+        # Возвращаем объекты фильмов в правильном порядке
+        result_movies = []
+        for movie_id in result_ids:
+            for movie in movies_list:
+                if movie.id == movie_id:
+                    result_movies.append(movie)
+                    break
+        
+        return result_movies, distances[0]
+    
+    # Поиск по всему индексу
+    distances, indices = _INDEX.search(query_embedding, top_k)
+    
+    # Получаем ID фильмов
+    result_ids = [_ALL_MOVIE_IDS[i] for i in indices[0]]
+    
+    # Получаем фильмы из БД
+    movies = Movie.objects.filter(id__in=result_ids).prefetch_related('genre', 'director', 'country')
+    
+    # Сортируем по порядку из индекса
+    movie_dict = {movie.id: movie for movie in movies}
+    ordered_movies = [movie_dict[mid] for mid in result_ids if mid in movie_dict]
+    
+    return ordered_movies, distances[0]
+
 def build_faiss_index(force_rebuild=False):
     """Создает индекс FAISS для всех фильмов"""
+    from app.models import Movie
     index_path = 'movie_index.faiss'
     ids_path = 'movie_ids.npy'
     
@@ -82,36 +154,6 @@ def build_faiss_index(force_rebuild=False):
     
     print(f"Индекс успешно создан и сохранен. Содержит {index.ntotal} фильмов")
     return index
-
-def search_movies(query, top_k=5, model=None, index=None, movie_ids=None):
-    """Ищет фильмы по запросу"""
-    
-    # Загружаем модель если не передана
-    if model is None:
-        model = SentenceTransformer('cointegrated/rubert-tiny2')
-    
-    # Загружаем индекс если не передан
-    if index is None:
-        index = faiss.read_index('movie_index.faiss')
-    if movie_ids is None:
-        movie_ids = np.load('movie_ids.npy')
-    
-    # Создаем эмбеддинг из запроса и ищем похожие
-    query_embedding = model.encode([query], convert_to_numpy=True)
-    distances, indices = index.search(query_embedding, top_k)
-    
-    # Получаем ID фильмов
-    result_ids = [movie_ids[i] for i in indices[0]]
-    movies = Movie.objects.filter(id__in=result_ids).prefetch_related('genre', 'director', 'country')
-    
-    # Сортируем по порядку из индекса
-    movie_dict = {movie.id: movie for movie in movies}
-    ordered_movies = []
-    for mid in result_ids:
-        if mid in movie_dict:
-            ordered_movies.append(movie_dict[mid])
-    
-    return ordered_movies, distances[0]
 
 def print_movie_info(movie, rank, score):
     print(f"{rank}. {movie.movie_name} ({movie.year})")
@@ -158,5 +200,10 @@ def test_single_query():
     else:
         print("Ничего не найдено")
 
-if __name__ == "__main__":
+if __name__ == "__main__": 
+    from app.models import Movie
+    # Настройка Django окружения
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myapp.settings")
+    django.setup()
+
     test_single_query()

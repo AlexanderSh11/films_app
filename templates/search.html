@@ -25,6 +25,12 @@
                                 <label for="title" class="filter-label">Название</label>
                                 <input id="title" name="title" class="filter-select" type="text" placeholder="Название"></input>
                             </div>
+
+                            <div class="filter-group">
+                                <label for="semantic" class="filter-label">Поиск по смыслу</label>
+                                <input id="semantic" name="semantic" class="filter-select" type="text" placeholder="Осень, грустный, вампиры..." value="{{ semantic_query }}">
+                            </div>
+
                             <div class="filter-group">
                                 <label for="sort" class="filter-label">Сортировка</label>
                                 <select id="sort" name="sort" class="filter-select">
