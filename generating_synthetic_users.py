@@ -250,12 +250,12 @@ class Visualizer:
     @staticmethod
     def elbow_method(data_X):
         wcss = []
-        for i in range(1, 11):
+        for i in range(1, 15):
             model = KMeans(n_clusters=i, random_state=0, n_init="auto")
             model.fit(data_X)
             wcss.append(model.inertia_)
 
-        plt.plot(range(1, 11), wcss)
+        plt.plot(range(1, 15), wcss)
         plt.title('Метод локтя (Elbow Method)')
         plt.xlabel('k - количество кластеров')
         plt.ylabel('WCSS')
@@ -270,7 +270,7 @@ class Visualizer:
 
         results = {}
 
-        for i in range(2,11):
+        for i in range(2,15):
             model = KMeans(n_clusters=i, random_state=0, n_init="auto")
             model.fit(data_X)
             predicted_clusters = model.fit_predict(data_X)
@@ -292,7 +292,7 @@ class Visualizer:
 
         results = {}
 
-        for i in range(2,11):
+        for i in range(2,15):
             model = KMeans(n_clusters=i, random_state=0, n_init="auto")
             predicted_clusters = model.fit_predict(data_X)
             sil_score = silhouette_score(data_X, predicted_clusters)
@@ -446,7 +446,9 @@ def main():
             (50, 60): "Квентин Тарантино",
             (60, 70): "Гай Ричи",
             (70, 80): "Роберт Земекис",
-            (80, 90): "Стивен Роач"
+            (80, 90): "Стивен Роач",
+            (90, 100): "Стивен Спилберг",
+            (100, 110): "Дэвид Линч",
         },
         "favorite_country": {
             (0, 30): "США",
@@ -500,7 +502,27 @@ def main():
             name="Любители ужасов",
             center=[85, 65, 75, 20, 1, 2, 4, 6, 8, 12, 30, 18, 25, 95, 18],
             std=4
-        )
+        ),
+            Cluster(
+            name="Любители документального кино",
+            center=[15, 25, 95, 45, 8, 10, 15, 5, 3, 1, 15, 8, 12, 90, 12],
+            std=3
+        ),
+        Cluster(
+            name="Любители артхауса",
+            center=[35, 45, 108, 55, 2, 3, 5, 8, 10, 12, 18, 10, 15, 105, 16],
+            std=4
+        ),
+        Cluster(
+            name="Любители классики",
+            center=[25, 35, 38, 65, 12, 15, 18, 5, 2, 0, 22, 12, 18, 135, 0],
+            std=3
+        ),
+        Cluster(
+            name="Любители короткометражек",
+            center=[45, 55, 48, 25, 4, 6, 8, 10, 12, 14, 28, 15, 22, 45, 6],
+            std=4
+        ),
     ]
     features = [
         'favorite_genre', 'high_rated_genre', 'favorite_director', 'favorite_country',
@@ -508,8 +530,8 @@ def main():
         'decade_count_10', 'decade_count_20', 'count_ratings', 'max_rating_count', 'favorites_count',
         'avg_runtime', 'avg_age_rating'
     ]
-    N_users = 1000
-    generator = UsersGenerator(clusters=clusters, n_users=1000, features=features)
+    N_users = 1500
+    generator = UsersGenerator(clusters=clusters, n_users=N_users, features=features)
     data = generator.generate_data()
     print("Сгенерированы пользователи.")
     print("Определение оптимального числа кластеров.")
