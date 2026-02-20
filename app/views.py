@@ -1,6 +1,5 @@
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from django.core.cache import cache
-import time
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
@@ -10,7 +9,8 @@ from django.views.generic import TemplateView
 from app.forms import RatingForm
 from content_based import MovieRecommender as content_based_recommender
 from collaborative_filtering import MovieRecommender as user_to_user_recommender
-from .models import Movie, Favorite, MovieRating
+from hybrid_recommender import HybridRecommender as hybrid_recommender
+from app.models import Movie, Favorite, MovieRating
 from django.contrib.auth.models import User
 
 from movie_searcher import search_movies
@@ -124,6 +124,7 @@ class HomePageView(TemplateView):
         user_favorites_ids = []
         cb_recommendations = []
         cf_recommendations = []
+        hybrid_recommendations = []
         if request.user.is_authenticated:
             user_favorites_ids = Favorite.objects.filter(user=request.user).values_list('movie_id', flat=True)
             recommender = content_based_recommender(request.user)
@@ -132,11 +133,14 @@ class HomePageView(TemplateView):
             recommender.train()
             user_pred = recommender.predict_user_based_k_fract_mean(top=10)
             cf_recommendations = recommender.recommend_movies(request.user.id, user_pred, n=10, include_ratings=True)
+            hybrid = hybrid_recommender()
+            hybrid_recommendations = hybrid.recommend_adaptive(request.user.id, n=10)
 
         context['movies_by_genre'] = sorted_movies_by_genre
         context['user_favorites'] = user_favorites_ids
         context['recommendations'] = cb_recommendations
         context['user_to_user_recommendations'] = cf_recommendations
+        context['hybrid_recommendations'] = hybrid_recommendations
         return context
 
 

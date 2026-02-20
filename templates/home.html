@@ -170,6 +170,82 @@
         </section>
         {% endif %}
 
+        {% if hybrid_recommendations %}
+        <section class="movie-section">
+            <h2 class="section-title">Гибридные рекомендации <span class="highlight">★</span></h2>
+            <div class="carousel-container">
+                <button class="carousel-btn carousel-btn-left" aria-label="Прокрутить влево">
+                    <svg width="24" height="24" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+                    </svg>
+                </button>
+                <div class="movie-scroll-container">
+                    <div class="movie-row">
+                        {% for movie in hybrid_recommendations %}
+                        <div class="movie-card">
+                            <div class="movie-poster-container">
+                                {% if movie.local_poster %}
+                                    <img src="{{ movie.poster_display_url }}" alt="{{ movie.movie_name }}" class="movie-poster"/>
+                                {% else %}
+                                    <img src="{{ movie.poster_link }}" alt="{{ movie.movie_name }}" class="movie-poster"/>
+                                {% endif %}
+                                <div class="movie-rating movie-rating-color">{{ movie.rating }}</div>
+                            </div>
+                            <div class="movie-info">
+                                <h3 class="movie-title">{{ movie.movie_name }}</h3>
+                                <p class="movie-meta">
+                                    {{ movie.year }} •{% for country in movie.country.all %}
+                                    {{ country.name }}{% if not forloop.last %}, {% endif %}
+                                    {% empty %}
+                                    {% endfor %}
+                                </p>
+
+                                <p class="movie-meta">
+                                    {% for genre in movie.genre.all %}
+                                    {{ genre.name }}{% if not forloop.last %}, {% endif %}
+                                    {% empty %}
+                                    Не указано
+                                    {% endfor %}
+                                </p>
+
+                                <p class="movie-director">
+                                    Режиссер:{% for director in movie.director.all %}
+                                    {{ director.name }}{% if not forloop.last %}, {% endif %}
+                                    {% empty %}
+                                    Не указано
+                                    {% endfor %}
+                                </p>
+                                <div class="movie-actions">
+                                    {% if movie.id in user_favorites %}
+                                    <a href="{% url 'remove_from_favorites' movie.id %}" class="action-btn remove-btn">
+                                        <svg width="16" height="16" viewBox="0 0 24 24">
+                                            <path fill="currentColor" d="M19 13H5v-2h14v2z" />
+                                        </svg>Удалить
+                                    </a>
+                                    {% else %}
+                                    <a href="{% url 'add_to_favorites' movie.id %}" class="action-btn add-btn">
+                                        <svg width="16" height="16" viewBox="0 0 24 24">
+                                            <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                                        </svg>В избранное
+                                    </a>
+                                    {% endif %}
+                                    <a href="{% url 'movie_detail' movie.id %}"
+                                        class="action-btn details-btn">Подробнее</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <button class="carousel-btn carousel-btn-right" aria-label="Прокрутить вправо">
+                    <svg width="24" height="24" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z" />
+                    </svg>
+                </button>
+            </div>
+        </section>
+        {% endif %}
+
         {% for genre, movies in movies_by_genre.items %}
         <section class="movie-section">
             <h2 class="section-title">
