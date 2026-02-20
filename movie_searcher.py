@@ -1,7 +1,5 @@
 import os
 import django
-import sys
-from pathlib import Path
 
 from sentence_transformers import SentenceTransformer
 import faiss
@@ -15,17 +13,29 @@ _ALL_MOVIE_IDS = None
 def load_model_and_index():
     """Загружает модель и индекс при первом вызове"""
     global _MODEL, _INDEX, _ALL_MOVIE_IDS
-    
+    model_changed = False
+
     if _MODEL is None:
-        _MODEL = SentenceTransformer('cointegrated/rubert-tiny2')
+        try:
+            model_path = os.path.join(os.path.dirname(__file__), 'fine_tuned_model\content\drive\MyDrive\Films app\\fine_tuned_rubert_tiny2')
+            print(f"Загрузка дообученной модели из {model_path}")
+            _MODEL = SentenceTransformer(model_path)
+            print("Дообученная модель загружена")
+        except Exception as e:
+            print(f"Не удалось загрузить дообученную модель: {e}")
+            print("Загружаем стандартную модель")
+            _MODEL = SentenceTransformer('cointegrated/rubert-tiny2')
     
-    if _INDEX is None:
-        index_path = 'movie_index.faiss'
-        ids_path = 'movie_ids.npy'
-        
-        if os.path.exists(index_path) and os.path.exists(ids_path):
-            _INDEX = faiss.read_index(index_path)
-            _ALL_MOVIE_IDS = np.load(ids_path)
+    index_path = 'movie_index.faiss'
+    ids_path = 'movie_ids.npy'
+    
+    if os.path.exists(index_path) and os.path.exists(ids_path):
+        _INDEX = faiss.read_index(index_path)
+        _ALL_MOVIE_IDS = np.load(ids_path)
+        print(f"Индекс загружен, содержит {len(_ALL_MOVIE_IDS)} фильмов")
+    else:
+        print("Индекс не найден")
+        build_faiss_index(force_rebuild=True)
 
 def get_movie_text_representation(movie):
     """Преобразует объект фильма в текстовую строку для создания эмбеддингов"""
@@ -177,21 +187,9 @@ def test_single_query():
         print("Запрос не может быть пустым")
         return
     
-    # Загружаем модель
-    model = SentenceTransformer('cointegrated/rubert-tiny2')
+    print(f"Поиск: '{query}'")
     
-    index_path = 'movie_index.faiss'
-    ids_path = 'movie_ids.npy'
-    
-    if not os.path.exists(index_path) or not os.path.exists(ids_path):
-        print("Индекс не найден. Создаём новый")
-        build_faiss_index(force_rebuild=True)
-    
-    # Загружаем 
-    index = faiss.read_index(index_path)
-    movie_ids = np.load(ids_path)
-    
-    movies, scores = search_movies(query, top_k=5, model=model, index=index, movie_ids=movie_ids)
+    movies, scores = search_movies(query, top_k=5)
     
     if movies:
         print(f"Найдено {len(movies)} фильмов:")
@@ -200,10 +198,10 @@ def test_single_query():
     else:
         print("Ничего не найдено")
 
-if __name__ == "__main__": 
-    from app.models import Movie
-    # Настройка Django окружения
+if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myapp.settings")
     django.setup()
+
+    from app.models import Movie
 
     test_single_query()

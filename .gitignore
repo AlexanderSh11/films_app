@@ -19,3 +19,9 @@ users_clasters_generating.py
 
 movie_ids.npy
 movie_index.faiss
+fine-tuning.py
+fine_tuned_model/
+
+export.py
+movies_data.json
+training_pairs.json
