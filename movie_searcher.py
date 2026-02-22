@@ -128,7 +128,26 @@ def search_movies(query, top_k=5, movie_ids=None):
     movie_dict = {movie.id: movie for movie in movies}
     ordered_movies = [movie_dict[mid] for mid in result_ids if mid in movie_dict]
     
-    return ordered_movies, distances[0]
+    # увеличиваем score для фильмов с совпадением по названию
+    query_lower = query.lower()
+    boosted_distances = list(distances[0].copy())
+    
+    for i, movie in enumerate(ordered_movies):
+        title_lower = movie.movie_name.lower()
+        
+        # Если название полностью совпадает с запросом
+        if query_lower == title_lower:
+            boosted_distances[i] *= 0.6
+        # Если запрос является частью названия или название часть запроса
+        elif query_lower in title_lower or title_lower in query_lower:
+            boosted_distances[i] *= 0.7
+
+    # Сортируем заново с учетом score
+    sorted_indices = np.argsort(boosted_distances)
+    ordered_movies = [ordered_movies[i] for i in sorted_indices]
+    boosted_distances = [boosted_distances[i] for i in sorted_indices]
+
+    return ordered_movies, boosted_distances
 
 def build_faiss_index(force_rebuild=False):
     """Создает индекс FAISS для всех фильмов"""
@@ -189,7 +208,7 @@ def test_single_query():
     
     print(f"Поиск: '{query}'")
     
-    movies, scores = search_movies(query, top_k=5)
+    movies, scores = search_movies(query, top_k=10)
     
     if movies:
         print(f"Найдено {len(movies)} фильмов:")
