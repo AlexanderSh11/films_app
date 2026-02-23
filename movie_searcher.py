@@ -13,7 +13,6 @@ _ALL_MOVIE_IDS = None
 def load_model_and_index():
     """Загружает модель и индекс при первом вызове"""
     global _MODEL, _INDEX, _ALL_MOVIE_IDS
-    model_changed = False
 
     if _MODEL is None:
         try:
