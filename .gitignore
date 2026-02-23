@@ -21,6 +21,7 @@ movie_ids.npy
 movie_index.faiss
 fine-tuning.py
 fine_tuned_model/
+test_queries.py
 
 export.py
 movies_data.json

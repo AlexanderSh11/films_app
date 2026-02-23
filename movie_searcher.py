@@ -4,6 +4,7 @@ from django.core.cache import cache
 from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
+from collections import defaultdict
 
 # Глобальные переменные для кэширования
 _MODEL = None
@@ -87,19 +88,40 @@ def get_movie_text_representation(movie):
     parts = []
     
     parts.append(f"название: {movie.movie_name}")
+    parts.append(f"фильм: {movie.movie_name}")
+
     parts.append(f"год: {movie.year}")
+    decade = (movie.year // 10) * 10
+    parts.append(f"{decade}-е годы")
+    parts.append(f"фильмы {decade}-х")
     
     genres = list(movie.genre.all().values_list('name', flat=True))
     if genres:
-        parts.append(f"жанры: {', '.join(genres)}")
+        genre_text = ', '.join(genres)
+        parts.append(f"жанры: {genre_text}")
+        parts.append(f"жанр: {genre_text}")
+
+        for genre in genres:
+            parts.append(f"в жанре {genre}")
+            parts.append(f"{genre} фильм")
+            parts.append(f"{genre} кино")
     
     directors = list(movie.director.all().values_list('name', flat=True))
     if directors:
-        parts.append(f"режиссёр: {', '.join(directors)}")
+        director_text = ', '.join(directors)
+        parts.append(f"режиссёр: {director_text}")
+        parts.append(f"режиссер: {director_text}")
+        for director in directors:
+            parts.append(f"фильмы {director}")
+            parts.append(f"режиссёр {director}")
+            parts.append(f"кино {director}")
     
     countries = list(movie.country.all().values_list('name', flat=True))
     if countries:
         parts.append(f"страна: {', '.join(countries)}")
+        for country in countries:
+            parts.append(f"{country} кино")
+            parts.append(f"фильмы {country}")
     
     if movie.overview:
         parts.append(f"описание: {movie.overview}")
@@ -108,7 +130,10 @@ def get_movie_text_representation(movie):
         parts.append(f"длительность: {movie.runtime}")
     
     if movie.rating:
-        parts.append(f"рейтинг: {movie.rating} из 10")
+        parts.append(f"рейтинг: {movie.rating}")
+        if movie.rating >= 8:
+            parts.append("высокий рейтинг")
+            parts.append("лучшие фильмы")
     
     if movie.meta_score:
         parts.append(f"meta_score: {movie.meta_score}")
@@ -192,10 +217,10 @@ def search_movies(query, top_k=5, movie_ids=None):
         
         # Если название полностью совпадает с запросом
         if query_lower == title_lower:
-            boosted_distances[i] *= 0.6
+            boosted_distances[i] *= 0.3
         # Если запрос является частью названия или название часть запроса
         elif query_lower in title_lower or title_lower in query_lower:
-            boosted_distances[i] *= 0.7
+            boosted_distances[i] *= 0.5
 
     # Сортируем заново с учетом score
     sorted_indices = np.argsort(boosted_distances)
@@ -254,6 +279,86 @@ def print_movie_info(movie, rank, score):
     if movie.overview:
         print(movie.overview[:400])
 
+def calculate_metrics(retrieved_ids, relevant_ids, k=10):
+    relevant_set = set(relevant_ids)
+    retrieved_k = retrieved_ids[:k]
+    metrics = {}
+    
+    # Precision@k
+    relevant_retrieved = sum(1 for doc_id in retrieved_k if doc_id in relevant_set)
+    metrics[f'P@{k}'] = relevant_retrieved / k if k > 0 else 0
+    
+    # Recall@k
+    metrics[f'R@{k}'] = relevant_retrieved / len(relevant_set) if relevant_set else 0
+    
+    # F1@k
+    p = metrics[f'P@{k}']
+    r = metrics[f'R@{k}']
+    metrics[f'F1@{k}'] = 2 * (p * r) / (p + r) if (p + r) > 0 else 0
+    
+    return metrics
+
+def evaluate_model(model, movies_data, test_queries):
+    # Создаем словарь {название: id}
+    title_to_id = {movie.movie_name: movie.id for movie in movies_data}
+    
+    # Конвертируем названия в ID
+    for q in test_queries:
+        q['relevant_ids'] = []
+        for title in q['relevant_titles']:
+            # Ищем похожие названия
+            for movie in movies_data:
+                if title.lower() in movie.movie_name.lower():
+                    q['relevant_ids'].append(movie.id)
+    
+    # Собираем метрики
+    all_metrics = defaultdict(list)
+    detailed_results = []
+    
+    for q in test_queries:
+        print(f"Запрос: '{q['query']}'")
+        print(f"Релевантные фильмы: {q['relevant_titles']}")
+        
+        # Получаем результаты поиска
+        retrieved_movies, scores = model(q['query'], top_k=20)
+        retrieved_ids = [m.id for m in retrieved_movies]
+        
+        # Считаем метрики для разных k
+        for k in [1, 3, 5, 10]:
+            metrics = calculate_metrics(retrieved_ids, q['relevant_ids'], k)
+            for name, value in metrics.items():
+                all_metrics[f"{name}_{q['type']}"].append(value)
+                all_metrics[name].append(value)
+        
+        # Сохраняем детальные результаты
+        detailed_results.append({
+            'query': q['query'],
+            'type': q['type'],
+            'relevant': q['relevant_titles'],
+            'retrieved': [m.movie_name for m in retrieved_movies[:5]],
+            'scores': list(scores[:5]),
+        })
+        
+        # Показываем первые результаты
+        print("Найденные фильмы:")
+        for i, (movie, score) in enumerate(zip(retrieved_movies[:5], scores[:5]), 1):
+            relevant = "Relevant" if movie.id in q['relevant_ids'] else "Not_Relevant"
+            print(f"  {i}. [{relevant}] {movie.movie_name} ({movie.year}) - {score:.4f}")
+    
+    # Усредняем метрики
+    avg_metrics = {}
+    for metric_name, values in all_metrics.items():
+        avg_metrics[metric_name] = np.mean(values)
+    
+    # Основные метрики
+    print("Основные метрики:")
+    for k in [1, 3, 5, 10]:
+        print(f"  Precision@{k}: {avg_metrics.get(f'P@{k}', 0):.4f}")
+        print(f"  Recall@{k}:    {avg_metrics.get(f'R@{k}', 0):.4f}")
+        print(f"  F1@{k}:        {avg_metrics.get(f'F1@{k}', 0):.4f}")
+    
+    return avg_metrics, detailed_results
+
 def test_single_query():
     query = input("Введите поисковый запрос: ").strip()
     
@@ -277,5 +382,9 @@ if __name__ == "__main__":
     django.setup()
 
     from app.models import Movie
+    from test_queries import TEST_QUERIES
 
-    test_single_query()
+    # test_single_query()
+    movies_data = list(Movie.objects.prefetch_related('genre', 'director', 'country').all())
+    test_queries = TEST_QUERIES
+    metrics, details = evaluate_model(search_movies, movies_data, test_queries)
