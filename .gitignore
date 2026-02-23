@@ -25,3 +25,6 @@ fine_tuned_model/
 export.py
 movies_data.json
 training_pairs.json
+
+movie_embeddings.npy
+movie_ids_embeddings.npy
