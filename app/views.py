@@ -40,24 +40,11 @@ class SearchPageView(TemplateView):
             
             if filtered_movie_ids:
                 # Ищем среди отфильтрованных по жанру фильмов
-                semantic_results, scores = search_movies(
+                movies, scores = search_movies(
                     query=semantic_query,
                     movie_ids=filtered_movie_ids,
                     top_k=20
                 )
-                
-                result_ids = [movie.id for movie in semantic_results]
-                
-                # Получаем фильмы в порядке релевантности
-                movies = Movie.objects.filter(id__in=result_ids).prefetch_related('genre', 'director', 'country')
-                
-                # Сортируем по порядку из результатов поиска
-                movie_dict = {movie.id: movie for movie in movies}
-                ordered_movies = []
-                for mid in result_ids:
-                    if mid in movie_dict:
-                        ordered_movies.append(movie_dict[mid])
-                movies = ordered_movies
             else:
                 movies = []
         

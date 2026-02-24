@@ -10,6 +10,8 @@ from collections import defaultdict
 _MODEL = None
 _INDEX = None
 _ALL_MOVIE_IDS = None
+_ALL_EMBEDDINGS = None
+_ALL_EMBEDDINGS_DICT = None
 
 def load_model_and_index():
     """Загружает модель и индекс при первом вызове"""
@@ -18,10 +20,12 @@ def load_model_and_index():
     _MODEL = cache.get('semantic_model')
     _INDEX = cache.get('semantic_index')
     _ALL_MOVIE_IDS = cache.get('semantic_ids')
+    _ALL_EMBEDDINGS = cache.get('semantic_embeddings')
+    _ALL_EMBEDDINGS_DICT = cache.get('semantic_embeddings_dict')
 
     if _MODEL is None:
         try:
-            model_path = os.path.join(os.path.dirname(__file__), 'fine_tuned_model\content\drive\MyDrive\Films app\\fine_tuned_rubert_tiny2')
+            model_path = os.path.join(os.path.dirname(__file__), 'fine_tuned_model\\fine_tuned_rubert_tiny2')
             print(f"Загрузка дообученной модели из {model_path}")
             _MODEL = SentenceTransformer(model_path)
             print("Дообученная модель загружена")
@@ -44,18 +48,21 @@ def load_model_and_index():
         print("Индекс не найден")
         build_faiss_index(force_rebuild=True)
 
-    embeddings_path = 'movie_embeddings.npy'
-    if os.path.exists(embeddings_path):
-        _ALL_EMBEDDINGS = np.load(embeddings_path)
-        # Создаем словарь {movie_id: embedding}
-        _ALL_EMBEDDINGS_DICT = {
-            movie_id: _ALL_EMBEDDINGS[i] 
-            for i, movie_id in enumerate(_ALL_MOVIE_IDS)
-        }
-        print(f"Эмбеддинги загружены: {_ALL_EMBEDDINGS.shape}")
-    else:
-        print("Эмбеддинги не найдены")
-        build_embeddings_cache()
+    if _ALL_EMBEDDINGS is None or _ALL_EMBEDDINGS_DICT is None:
+        embeddings_path = 'movie_embeddings.npy'
+        if os.path.exists(embeddings_path):
+            _ALL_EMBEDDINGS = np.load(embeddings_path)
+            # Создаем словарь {movie_id: embedding}
+            _ALL_EMBEDDINGS_DICT = {
+                movie_id: _ALL_EMBEDDINGS[i] 
+                for i, movie_id in enumerate(_ALL_MOVIE_IDS)
+            }
+            cache.set('semantic_embeddings', _ALL_EMBEDDINGS, 60*5)
+            cache.set('semantic_embeddings_dict', _ALL_EMBEDDINGS_DICT, 60*5)
+            print(f"Эмбеддинги загружены: {_ALL_EMBEDDINGS.shape}")
+        else:
+            print("Эмбеддинги не найдены")
+            build_embeddings_cache()
 
 def build_embeddings_cache():
 
@@ -151,15 +158,10 @@ def search_movies(query, top_k=5, movie_ids=None):
     # Создаем эмбеддинг из запроса
     query_embedding = _MODEL.encode([query], convert_to_numpy=True)
     
-    # Если передан список конкретных ID для поиска
+    # Определяем, по какому набору ID ищем
     if movie_ids is not None:
-        # Получаем фильмы из БД для указанных ID
-        movies_subset = Movie.objects.filter(id__in=movie_ids).prefetch_related('genre', 'director', 'country')
-        
-        if not movies_subset:
-            return [], []
-        
-        # Создаем тексты и эмбеддинги для подмножества
+        # Поиск по подмножеству фильмов
+        # Получаем эмбеддинги только для указанных ID
         embeddings = []
         valid_movie_ids = []
         
@@ -171,7 +173,6 @@ def search_movies(query, top_k=5, movie_ids=None):
         if not embeddings:
             return [], []
         
-        # Преобразуем в numpy array
         embeddings = np.array(embeddings)
         
         # Создаем временный индекс
@@ -179,38 +180,34 @@ def search_movies(query, top_k=5, movie_ids=None):
         temp_index.add(embeddings)
         
         # Ищем
-        distances, indices = temp_index.search(query_embedding, min(top_k, len(movies_subset)))
+        distances, indices = temp_index.search(query_embedding, min(top_k, len(valid_movie_ids)))
         
-        # Получаем результаты
-        movies_list = list(movies_subset)
-        result_ids = [movies_list[i].id for i in indices[0]]
+        # Получаем ID результатов в порядке релевантности
+        result_ids = [valid_movie_ids[i] for i in indices[0]]
+        result_distances = distances[0]
         
-        # Возвращаем объекты фильмов в правильном порядке
-        result_movies = []
-        for movie_id in result_ids:
-            for movie in movies_list:
-                if movie.id == movie_id:
-                    result_movies.append(movie)
-                    break
-        
-        return result_movies, distances[0]
-    
-    # Поиск по всему индексу
-    distances, indices = _INDEX.search(query_embedding, top_k)
-    
-    # Получаем ID фильмов
-    result_ids = [_ALL_MOVIE_IDS[i] for i in indices[0]]
+    else:
+        # Поиск по всему индексу
+        distances, indices = _INDEX.search(query_embedding, top_k)
+        result_ids = [_ALL_MOVIE_IDS[i] for i in indices[0]]
+        result_distances = distances[0]
     
     # Получаем фильмы из БД
     movies = Movie.objects.filter(id__in=result_ids).prefetch_related('genre', 'director', 'country')
     
-    # Сортируем по порядку из индекса
+    # Сортируем по порядку из результатов поиска
     movie_dict = {movie.id: movie for movie in movies}
-    ordered_movies = [movie_dict[mid] for mid in result_ids if mid in movie_dict]
+    ordered_movies = []
+    ordered_distances = []
     
-    # увеличиваем score для фильмов с совпадением по названию
+    for mid, dist in zip(result_ids, result_distances):
+        if mid in movie_dict:
+            ordered_movies.append(movie_dict[mid])
+            ordered_distances.append(dist)
+    
+    # Применяем бустинг для названий (одинаково для обоих случаев)
     query_lower = query.lower()
-    boosted_distances = list(distances[0].copy())
+    boosted_distances = list(ordered_distances.copy())
     
     for i, movie in enumerate(ordered_movies):
         title_lower = movie.movie_name.lower()
@@ -222,12 +219,12 @@ def search_movies(query, top_k=5, movie_ids=None):
         elif query_lower in title_lower or title_lower in query_lower:
             boosted_distances[i] *= 0.5
 
-    # Сортируем заново с учетом score
+    # Сортируем заново с учетом бустинга
     sorted_indices = np.argsort(boosted_distances)
-    ordered_movies = [ordered_movies[i] for i in sorted_indices]
-    boosted_distances = [boosted_distances[i] for i in sorted_indices]
+    final_movies = [ordered_movies[i] for i in sorted_indices]
+    final_distances = [boosted_distances[i] for i in sorted_indices]
 
-    return ordered_movies, boosted_distances
+    return final_movies, final_distances
 
 def build_faiss_index(force_rebuild=False):
     """Создает индекс FAISS для всех фильмов"""
@@ -240,7 +237,8 @@ def build_faiss_index(force_rebuild=False):
         return
     
     # Загружаем модель cointegrated/rubert-tiny2
-    model = SentenceTransformer('cointegrated/rubert-tiny2')
+    model_path = os.path.join(os.path.dirname(__file__), 'fine_tuned_model\\fine_tuned_rubert_tiny2')
+    model = SentenceTransformer(model_path)
     
     print("Создание текстового описания для каждого фильма")
     movies = Movie.objects.prefetch_related('genre', 'director', 'country').all()
@@ -384,7 +382,7 @@ if __name__ == "__main__":
     from app.models import Movie
     from test_queries import TEST_QUERIES
 
-    # test_single_query()
+    test_single_query()
     movies_data = list(Movie.objects.prefetch_related('genre', 'director', 'country').all())
     test_queries = TEST_QUERIES
     metrics, details = evaluate_model(search_movies, movies_data, test_queries)
