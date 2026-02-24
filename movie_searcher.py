@@ -96,6 +96,7 @@ def get_movie_text_representation(movie):
     
     parts.append(f"название: {movie.movie_name}")
     parts.append(f"фильм: {movie.movie_name}")
+    parts.append(f"название фильма: {movie.movie_name}")
 
     parts.append(f"год: {movie.year}")
     decade = (movie.year // 10) * 10
@@ -112,6 +113,12 @@ def get_movie_text_representation(movie):
             parts.append(f"в жанре {genre}")
             parts.append(f"{genre} фильм")
             parts.append(f"{genre} кино")
+
+            parts.append(f"{movie.year} {genre}")
+            parts.append(f"{genre} {movie.year}")
+            parts.append(f"фильмы {genre} {movie.year}")
+            
+            parts.append(f"{genre} {decade}-х")
     
     directors = list(movie.director.all().values_list('name', flat=True))
     if directors:
@@ -122,6 +129,11 @@ def get_movie_text_representation(movie):
             parts.append(f"фильмы {director}")
             parts.append(f"режиссёр {director}")
             parts.append(f"кино {director}")
+
+            for genre in genres:
+                parts.append(f"{director} {genre}")
+                parts.append(f"{genre} {director}")
+                parts.append(f"фильмы {director} в жанре {genre}")
     
     countries = list(movie.country.all().values_list('name', flat=True))
     if countries:
@@ -129,6 +141,14 @@ def get_movie_text_representation(movie):
         for country in countries:
             parts.append(f"{country} кино")
             parts.append(f"фильмы {country}")
+
+            for genre in genres:
+                parts.append(f"{country} {genre}")
+                parts.append(f"{genre} {country}")
+                parts.append(f"{country} фильмы в жанре {genre}")
+            
+            parts.append(f"{country} {movie.year}")
+            parts.append(f"{country} {decade}-х")
     
     if movie.overview:
         parts.append(f"описание: {movie.overview}")
