@@ -16,15 +16,19 @@
         <section class="movie-detail-section">
             <div class="movie-detail-container">
                 <div class="movie-poster-container">
-                    {% if movie.poster_link %}
-                        <img src="{{ movie.poster_link }}" alt="{{ movie.movie_name }}" class="movie-poster-large">
+                    {% if movie.local_poster %}
+                    <img src="{{ movie.poster_display_url }}" alt="{{ movie.movie_name }}" class="movie-poster-large"/>
                     {% else %}
+                        {% if movie.poster_link %}
+                            <img src="{{ movie.poster_link }}" alt="{{ movie.movie_name }}" class="movie-poster-large"/>
+                        {% else %}
                         <div class="no-poster-large">
                             <svg width="64" height="64" viewBox="0 0 24 24">
                                 <path fill="var(--text-secondary)" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7.5 13h2v2H11V9H9.5v2.5h-2V9H6v6h1.5zm6.5 2h.5v1.5h1.5V16h.5v-1.5H17v-1h-1.5V13h-.5v1.5h-1V13H13v3zm.5-5.5h3V9h-3v1.5z"/>
                             </svg>
                             <p>Постер отсутствует</p>
                         </div>
+                        {% endif %}
                     {% endif %}
                 </div>
 

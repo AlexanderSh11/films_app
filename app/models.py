@@ -47,6 +47,7 @@ class Country(models.Model):
 class Movie(models.Model):
     id = models.AutoField(primary_key=True)
     poster_link = models.TextField(blank=True, null=True, verbose_name = 'Ссылка на постер')
+    local_poster = models.ImageField(upload_to='posters/', blank=True, null=True, verbose_name = 'Локальная ссылка на постер')
     movie_name = models.TextField(blank=False, null=False, verbose_name = 'Название')
     year = models.IntegerField(blank=False, null=False, verbose_name = 'Год')
     runtime = models.TextField(blank=True, null=True, verbose_name = 'Продолжительность', help_text = 'Формат: "<число> минут(ы)"')
@@ -58,7 +59,11 @@ class Movie(models.Model):
     genre = models.ManyToManyField('Genre', blank=True, verbose_name='Жанры')
     director = models.ManyToManyField('Director', blank=True, verbose_name='Режиссёры')
     country = models.ManyToManyField('Country', blank=True, verbose_name='Страны')
-
+    
+    @property
+    def poster_display_url(self):
+        """Возвращает правильный URL для отображения"""
+        return f"/posters/posters/{self.id}.jpg"
     class Meta:
         managed = True
         db_table = 'movie'

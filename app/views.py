@@ -1,6 +1,5 @@
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from django.core.cache import cache
-import time
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
@@ -10,8 +9,11 @@ from django.views.generic import TemplateView
 from app.forms import RatingForm
 from content_based import MovieRecommender as content_based_recommender
 from collaborative_filtering import MovieRecommender as user_to_user_recommender
-from .models import Movie, Favorite, MovieRating
+from hybrid_recommender import HybridRecommender as hybrid_recommender
+from app.models import Movie, Favorite, MovieRating
 from django.contrib.auth.models import User
+
+from movie_searcher import search_movies
 
 
 class SearchPageView(TemplateView):
@@ -23,26 +25,50 @@ class SearchPageView(TemplateView):
         genre = request.GET.get('genre', 'Все')
         title = request.GET.get('title', '')
         sort = request.GET.get('sort', 'newest')
+        semantic_query = request.GET.get('semantic', '')
 
         movies = Movie.objects.prefetch_related('genre').all()
 
-        if genre != 'Все':
-            movies = movies.filter(genre__name__icontains=genre)
+        # Если есть семантический запрос - игнорируем title и sort
+        if semantic_query:
+            # Учитываем только жанр
+            if genre != 'Все':
+                movies = movies.filter(genre__name__icontains=genre)
+            
+            # Получаем ID фильмов с учетом жанра
+            filtered_movie_ids = list(movies.values_list('id', flat=True))
+            
+            if filtered_movie_ids:
+                # Ищем среди отфильтрованных по жанру фильмов
+                movies, scores = search_movies(
+                    query=semantic_query,
+                    movie_ids=filtered_movie_ids,
+                    top_k=20
+                )
+            else:
+                movies = []
+        
+        else:
+            # Обычный поиск без семантики
+            if genre != 'Все':
+                movies = movies.filter(genre__name__icontains=genre)
 
-        if title:
-            movies = movies.filter(movie_name__icontains=title)
+            if title:
+                movies = movies.filter(movie_name__icontains=title)
 
-        # Сортировка
-        if sort == 'названию':
-            movies = movies.order_by('movie_name', 'year')
-        elif sort == 'рейтингу (сначала лучшие)':
-            movies = movies.filter(rating__isnull=False).order_by('-rating')
-        elif sort == 'рейтингу (сначала худшие)':
-            movies = movies.filter(rating__isnull=False).order_by('rating')
-        elif sort == 'году выхода (сначала новые)':
-            movies = movies.order_by('-year', 'movie_name')
-        elif sort == 'году выхода (сначала старые)':
-            movies = movies.order_by('year', 'movie_name')
+            # Сортировка
+            if sort == 'названию':
+                movies = movies.order_by('movie_name', 'year')
+            elif sort == 'рейтингу (сначала лучшие)':
+                movies = movies.filter(rating__isnull=False).order_by('-rating')
+            elif sort == 'рейтингу (сначала худшие)':
+                movies = movies.filter(rating__isnull=False).order_by('rating')
+            elif sort == 'году выхода (сначала новые)':
+                movies = movies.order_by('-year', 'movie_name')
+            elif sort == 'году выхода (сначала старые)':
+                movies = movies.order_by('year', 'movie_name')
+            
+            movies = movies[:100]
 
         user_favorites_ids = []
         if request.user.is_authenticated:
@@ -50,7 +76,8 @@ class SearchPageView(TemplateView):
 
         context['selected_genre'] = genre
         context['selected_sort'] = sort
-        context['movies'] = movies[:100]
+        context['semantic_query'] = semantic_query
+        context['movies'] = movies
         context['user_favorites'] = user_favorites_ids
         return context
 
@@ -62,7 +89,7 @@ class HomePageView(TemplateView):
         context = super().get_context_data(**kwargs)
         request = self.request
 
-        movies = Movie.objects.prefetch_related('genre').all()
+        movies = Movie.objects.prefetch_related('genre').all().order_by('-rating')
 
         cached = cache.get('movies_by_genre')
         if cached:
@@ -74,10 +101,17 @@ class HomePageView(TemplateView):
                     if len(movies_by_genre[g.name]) < 10:
                         movies_by_genre[g.name].append(movie)
             cache.set('movies_by_genre', movies_by_genre, 60*5) # кеширование фильмов по жанрам
-
+        sorted_movies_by_genre = dict(
+            sorted(
+                movies_by_genre.items(), 
+                key=lambda item: len(item[1]), 
+                reverse=True
+            )
+        )
         user_favorites_ids = []
         cb_recommendations = []
         cf_recommendations = []
+        hybrid_recommendations = []
         if request.user.is_authenticated:
             user_favorites_ids = Favorite.objects.filter(user=request.user).values_list('movie_id', flat=True)
             recommender = content_based_recommender(request.user)
@@ -86,11 +120,14 @@ class HomePageView(TemplateView):
             recommender.train()
             user_pred = recommender.predict_user_based_k_fract_mean(top=10)
             cf_recommendations = recommender.recommend_movies(request.user.id, user_pred, n=10, include_ratings=True)
+            hybrid = hybrid_recommender()
+            hybrid_recommendations = hybrid.recommend_adaptive(request.user.id, n=10)
 
-        context['movies_by_genre'] = dict(movies_by_genre)
+        context['movies_by_genre'] = sorted_movies_by_genre
         context['user_favorites'] = user_favorites_ids
         context['recommendations'] = cb_recommendations
         context['user_to_user_recommendations'] = cf_recommendations
+        context['hybrid_recommendations'] = hybrid_recommendations
         return context
 
 

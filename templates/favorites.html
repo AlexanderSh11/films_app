@@ -40,7 +40,11 @@
             {% for favorite in favorites %}
               <div class="movie-card">
                 <div class="movie-poster-container">
-                  <img src="{{ favorite.movie.poster_link }}" alt="{{ favorite.movie.movie_name }}" class="movie-poster" />
+                  {% if favorite.movie.local_poster %}
+                    <img src="{{ favorite.movie.poster_display_url }}" alt="{{ favorite.movie.movie_name }}" class="movie-poster"/>
+                  {% else %}
+                    <img src="{{ favorite.movie.poster_link }}" alt="{{ favorite.movie.movie_name }}" class="movie-poster"/>
+                  {% endif %}
                   <div class="movie-rating movie-rating-color">{{ favorite.movie.rating }}</div>
                   <div class="favorite-badge">
                     <svg width="24" height="24" viewBox="0 0 24 24">

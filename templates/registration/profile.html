@@ -50,8 +50,11 @@
                         {% for favorite in favorites %}
                         <div class="movie-card">
                             <div class="movie-poster-container">
-                                <img src="{{ favorite.movie.poster_link }}" alt="{{ favorite.movie.movie_name }}"
-                                    class="movie-poster" />
+                                {% if favorite.movie.local_poster %}
+                                    <img src="{{ favorite.movie.poster_display_url }}" alt="{{ favorite.movie.movie_name }}" class="movie-poster"/>
+                                {% else %}
+                                    <img src="{{ favorite.movie.poster_link }}" alt="{{ favorite.movie.movie_name }}" class="movie-poster"/>
+                                {% endif %}
                                 <div class="movie-rating movie-rating-color">{{ favorite.movie.rating }}</div>
                                 <div class="favorite-badge">
                                     <svg width="24" height="24" viewBox="0 0 24 24">
@@ -116,8 +119,11 @@
                         {% for rating in ratings %}
                         <div class="movie-card">
                             <div class="movie-poster-container">
-                                <img src="{{ rating.movie.poster_link }}" alt="{{ rating.movie.movie_name }}"
-                                    class="movie-poster" />
+                                {% if rating.movie.local_poster %}
+                                    <img src="{{ rating.movie.poster_display_url }}" alt="{{ rating.movie.movie_name }}" class="movie-poster"/>
+                                {% else %}
+                                    <img src="{{ rating.movie.poster_link }}" alt="{{ rating.movie.movie_name }}" class="movie-poster"/>
+                                {% endif %}
                                 <div class="movie-rating
                     {% if rating.user_rating >= 7 %}movie-user-rating-green-color
                     {% elif rating.user_rating >= 4 %}movie-user-rating-yellow-color

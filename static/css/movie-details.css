@@ -134,12 +134,12 @@
 
 .star-rating input:checked ~ label,
 .star-rating input:hover ~ label {
-    color: var(--sea-star);
+    color: var(--yellow-color);
 }
 
 .star-rating label:hover,
 .star-rating label:hover ~ label {
-    color: var(--sea-star);
+    color: var(--yellow-color);
 }
 
 .rating-submit {
