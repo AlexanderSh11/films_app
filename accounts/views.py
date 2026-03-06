@@ -1,10 +1,11 @@
-from django.shortcuts import redirect, render, get_object_or_404
-
-from app.models import Favorite, MovieRating
-from .forms import CustomUserCreationForm
 from django.contrib.auth import logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect, render, get_object_or_404
+
+from app.models import Favorite, MovieRating
+from accounts.forms import CustomUserCreationForm
+
 
 def logout_view(request):
     if request.user.is_authenticated:

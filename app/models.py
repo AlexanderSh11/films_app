@@ -1,17 +1,11 @@
-from datetime import timezone
 from django.db import models
 from django.contrib.auth.models import User
 
-AGE_RATINGS = [
-    (0, '0+'),
-    (6, '6+'),
-    (12, '12+'),
-    (16, '16+'),
-    (18, '18+'),
-]
+from myapp.constants import AGE_RATING_CHOICES, MOVIE_RATING_CHOICES, NAME_MAX_LENGTH, POSTER_UPLOAD_PATH
+
 
 class Genre(models.Model):
-    name = models.CharField(max_length=128, unique=True, verbose_name='Жанр')
+    name = models.CharField(max_length=NAME_MAX_LENGTH, unique=True, verbose_name='Жанр')
 
     class Meta:
         db_table = 'genres'
@@ -23,7 +17,7 @@ class Genre(models.Model):
 
 
 class Director(models.Model):
-    name = models.CharField(max_length=128, unique=True, verbose_name='Режиссёр')
+    name = models.CharField(max_length=NAME_MAX_LENGTH, unique=True, verbose_name='Режиссёр')
 
     class Meta:
         db_table = 'directors'
@@ -34,7 +28,7 @@ class Director(models.Model):
         return self.name
     
 class Country(models.Model):
-    name = models.CharField(max_length=128, unique=True, verbose_name='Страна')
+    name = models.CharField(max_length=NAME_MAX_LENGTH, unique=True, verbose_name='Страна')
 
     class Meta:
         db_table = 'countries'
@@ -47,14 +41,14 @@ class Country(models.Model):
 class Movie(models.Model):
     id = models.AutoField(primary_key=True)
     poster_link = models.TextField(blank=True, null=True, verbose_name = 'Ссылка на постер')
-    local_poster = models.ImageField(upload_to='posters/', blank=True, null=True, verbose_name = 'Локальная ссылка на постер')
+    local_poster = models.ImageField(upload_to=POSTER_UPLOAD_PATH, blank=True, null=True, verbose_name = 'Локальная ссылка на постер')
     movie_name = models.TextField(blank=False, null=False, verbose_name = 'Название')
     year = models.IntegerField(blank=False, null=False, verbose_name = 'Год')
     runtime = models.TextField(blank=True, null=True, verbose_name = 'Продолжительность', help_text = 'Формат: "<число> минут(ы)"')
     rating = models.FloatField(blank=True, null=True, verbose_name = 'Оценка')
     overview = models.TextField(blank=True, null=True, verbose_name = 'Описание')
     meta_score = models.IntegerField(blank=True, null=True, verbose_name = 'Meta-оценка')
-    age_rating = models.IntegerField(blank=True, null=True, choices=AGE_RATINGS, verbose_name = 'Возрастной рейтинг')
+    age_rating = models.IntegerField(blank=True, null=True, choices=AGE_RATING_CHOICES, verbose_name = 'Возрастной рейтинг')
     
     genre = models.ManyToManyField('Genre', blank=True, verbose_name='Жанры')
     director = models.ManyToManyField('Director', blank=True, verbose_name='Режиссёры')
@@ -95,7 +89,7 @@ class MovieRating(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     user_rating = models.PositiveIntegerField(
         blank=True, null=True, 
-        choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5'), (6, '6'), (7, '7'), (8, '8'), (9, '9'), (10, '10'),]
+        choices=MOVIE_RATING_CHOICES
     )
     added_at = models.DateTimeField(auto_now_add=True)
 

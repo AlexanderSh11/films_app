@@ -1,19 +1,19 @@
 from collections import defaultdict
+
 from django.core.cache import cache
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.views.generic import TemplateView
+from django.contrib.auth.models import User
 
 from app.forms import RatingForm
+from app.models import Movie, Favorite, MovieRating
+from movie_searcher import search_movies
 from content_based import MovieRecommender as content_based_recommender
 from collaborative_filtering import MovieRecommender as user_to_user_recommender
 from hybrid_recommender import HybridRecommender as hybrid_recommender
-from app.models import Movie, Favorite, MovieRating
-from django.contrib.auth.models import User
-
-from movie_searcher import search_movies
 
 
 class SearchPageView(TemplateView):
@@ -134,13 +134,17 @@ class HomePageView(TemplateView):
 def movie_detail(request, movie_id):
     movie = get_object_or_404(Movie.objects.prefetch_related('genre', 'director', 'country'), id=movie_id)
     is_favorite = False
-    user_rating = 'Нет оценки'
+    user_rating = None
+    form = None
 
     if request.user.is_authenticated:
         is_favorite = Favorite.objects.filter(user=request.user, movie=movie).exists()
         rate = MovieRating.objects.filter(user=request.user, movie=movie).first()
         if rate:
             user_rating = rate.user_rating
+            form = RatingForm(instance=rate)
+        else:
+            form = RatingForm()
 
     # Преобразуем ManyToMany в списки для шаблона
     movie.genre_list = [g.name for g in movie.genre.all()]
@@ -150,7 +154,8 @@ def movie_detail(request, movie_id):
     return render(request, 'movie_detail.html', {
         'movie': movie,
         'is_favorite': is_favorite,
-        'user_rating': user_rating
+        'user_rating': user_rating,
+        'form': form
     })
 
 
