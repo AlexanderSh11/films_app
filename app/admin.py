@@ -63,11 +63,11 @@ class GenreAdmin(admin.ModelAdmin):
     ordering = ['name']
     
     def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related('movies')
+        return super().get_queryset(request).prefetch_related('movie_set')
     
-    @admin.display(description='Фильмов', ordering='movie_count')
+    @admin.display(description='Фильмов')
     def movie_count(self, obj):
-        return obj.movies.count()
+        return obj.movie_set.count()
 
 
 @admin.register(Director)
@@ -79,11 +79,11 @@ class DirectorAdmin(admin.ModelAdmin):
     ordering = ['name']
     
     def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related('movies')
+        return super().get_queryset(request).prefetch_related('movie_set')
     
-    @admin.display(description='Фильмов', ordering='movie_count')
+    @admin.display(description='Фильмов')
     def movie_count(self, obj):
-        return obj.movies.count()
+        return obj.movie_set.count()
 
 
 @admin.register(Country)
@@ -95,11 +95,11 @@ class CountryAdmin(admin.ModelAdmin):
     ordering = ['name']
     
     def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related('movies')
+        return super().get_queryset(request).prefetch_related('movie_set')
     
-    @admin.display(description='Фильмов', ordering='movie_count')
+    @admin.display(description='Фильмов')
     def movie_count(self, obj):
-        return obj.movies.count()
+        return obj.movie_set.count()
 
 
 @admin.register(Movie)

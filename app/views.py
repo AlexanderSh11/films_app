@@ -10,6 +10,7 @@ from django.contrib.auth.models import User
 
 from app.forms import RatingForm
 from app.models import Movie, Favorite, MovieRating
+from myapp.constants import TIME_TO_CASH, MOVIES_TO_RECOMMEND, MOVIES_FOR_GENRE, MOVIES_TO_SEARCH
 from movie_searcher import search_movies
 from content_based import MovieRecommender as content_based_recommender
 from collaborative_filtering import MovieRecommender as user_to_user_recommender
@@ -43,7 +44,7 @@ class SearchPageView(TemplateView):
                 movies, scores = search_movies(
                     query=semantic_query,
                     movie_ids=filtered_movie_ids,
-                    top_k=20
+                    top_k=MOVIES_TO_SEARCH
                 )
             else:
                 movies = []
@@ -98,9 +99,9 @@ class HomePageView(TemplateView):
             movies_by_genre = defaultdict(list)
             for movie in movies:
                 for g in movie.genre.all():
-                    if len(movies_by_genre[g.name]) < 10:
+                    if len(movies_by_genre[g.name]) < MOVIES_FOR_GENRE:
                         movies_by_genre[g.name].append(movie)
-            cache.set('movies_by_genre', movies_by_genre, 60*5) # кеширование фильмов по жанрам
+            cache.set('movies_by_genre', movies_by_genre, TIME_TO_CASH) # кеширование фильмов по жанрам
         sorted_movies_by_genre = dict(
             sorted(
                 movies_by_genre.items(), 
@@ -115,13 +116,13 @@ class HomePageView(TemplateView):
         if request.user.is_authenticated:
             user_favorites_ids = Favorite.objects.filter(user=request.user).values_list('movie_id', flat=True)
             recommender = content_based_recommender(request.user)
-            cb_recommendations = recommender.recommend_movies(10)
+            cb_recommendations = recommender.recommend_movies(MOVIES_TO_RECOMMEND)
             recommender = user_to_user_recommender()
             recommender.train()
-            user_pred = recommender.predict_user_based_k_fract_mean(top=10)
-            cf_recommendations = recommender.recommend_movies(request.user.id, user_pred, n=10, include_ratings=True)
+            user_pred = recommender.predict_user_based_k_fract_mean(top=MOVIES_TO_RECOMMEND)
+            cf_recommendations = recommender.recommend_movies(request.user.id, user_pred, n=MOVIES_TO_RECOMMEND, include_ratings=True)
             hybrid = hybrid_recommender()
-            hybrid_recommendations = hybrid.recommend_adaptive(request.user.id, n=10)
+            hybrid_recommendations = hybrid.recommend_adaptive(request.user.id, n=MOVIES_TO_RECOMMEND)
 
         context['movies_by_genre'] = sorted_movies_by_genre
         context['user_favorites'] = user_favorites_ids
