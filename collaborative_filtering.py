@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myapp.settings")
 django.setup()
 from app.models import Movie, Favorite, MovieRating
+from friends.models import Friendship
 from django.contrib.auth.models import User
 
 class MovieRecommender:
@@ -388,6 +389,29 @@ class MovieRecommender:
             print(f"Differences (<1) count: {good_predictions}/{len(comparison_data)} ({good_predictions/len(comparison_data)*100:.1f}%)")
         
         return comparison_data
+    
+    def get_friend_similarity(self, user_id, friend_id):
+        if self.user_similarity is None or self.user_to_index is None:
+            self.train()
+        
+        # Проверяем, есть ли оба пользователя в данных
+        if user_id not in self.user_to_index:
+            print(f"Пользователь {user_id} не найден в данных")
+            return None
+        
+        if friend_id not in self.user_to_index:
+            print(f"Друг {friend_id} не найден в данных")
+            return None
+        
+        user_idx = self.user_to_index[user_id]
+        friend_idx = self.user_to_index[friend_id]
+        
+        similarity = self.user_similarity[user_idx, friend_idx]
+        
+        return {
+            'similarity': similarity,
+            'similarity_percent': round(similarity * 100, 1)
+        }
 
 def main():
     user_id = User.objects.get(username='user_189_2').id
