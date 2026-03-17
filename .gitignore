@@ -3,6 +3,10 @@ __pycache__/
 *.pyo
 *.pyd
 
+.env
+.venv/
+venv/
+
 media/
 
 myapp/settings.py
