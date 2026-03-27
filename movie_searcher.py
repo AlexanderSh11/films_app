@@ -317,9 +317,7 @@ def calculate_metrics(retrieved_ids, relevant_ids, k=10):
     return metrics
 
 def evaluate_model(model, movies_data, test_queries):
-    # Создаем словарь {название: id}
-    title_to_id = {movie.movie_name: movie.id for movie in movies_data}
-    
+        
     # Конвертируем названия в ID
     for q in test_queries:
         q['relevant_ids'] = []
