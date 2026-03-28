@@ -2,6 +2,6 @@ from django.apps import AppConfig
 
 
 class FriendsConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'friends'
-    verbose_name = 'Управление друзьями'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "friends"
+    verbose_name = "Управление друзьями"
