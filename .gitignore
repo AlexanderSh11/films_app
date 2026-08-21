@@ -3,9 +3,15 @@ __pycache__/
 *.pyo
 *.pyd
 
+.idea/
+.vscode/
+
+.env
+.venv/
+venv/
+
 media/
 
-myapp/settings.py
 migrate.py
 imdb_top_1000.csv
 movies.csv

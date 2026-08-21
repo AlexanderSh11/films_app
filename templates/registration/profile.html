@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 {% load static %}
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Мой профиль - KinoMore</title>
@@ -10,19 +11,22 @@
     <link rel="stylesheet" href="{% static 'css/movie-card.css' %}" />
     <link rel="stylesheet" href="{% static 'css/user-content.css' %}" />
 </head>
+
 <body>
-    {% include "header.html" %}
+    {% include "header.html" with user=current_user %}
     <main class="profile-main">
         <div class="profile-container">
             <section class="profile-header">
-                <div class="profile-avatar">
+                <div class="profile-avatar" onclick="copyCurrentUrl()">
                     <div class="avatar-placeholder">
                         {{ user.username|first|upper }}
                     </div>
                 </div>
                 <div class="profile-info">
                     <h1>{{ user.username }}</h1>
+                    {% if is_own_profile %}
                     <p class="profile-email">{{ user.email }}</p>
+                    {% endif %}
                     <p class="profile-join-date">Участник с {{ user.date_joined|date:"d.m.Y" }}</p>
                     <div class="profile-stats">
                         <div class="stat-item">
@@ -36,6 +40,39 @@
                     </div>
                 </div>
             </section>
+
+            <div class="profile-friends">
+                <h3>Друзья <span class="friends-count">{{ friends|length }}</span></h3>
+                <div class="friends-list">
+                    {% if friends %}
+                    {% for friend in friends %}
+                    <a href="{% url 'profile' friend.id %}" class="friend-item">
+                        <div class="friend-avatar">
+                            {{ friend.username|first|upper }}
+                        </div>
+                        <span class="friend-name">{{ friend.username }}</span>
+                    </a>
+                    {% endfor %}
+                    {% else %}
+                    <p class="no-friends">Нет друзей</p>
+                    {% endif %}
+                </div>
+
+                {% if not is_own_profile and current_user.is_authenticated %}
+                <div class="friend-actions">
+                    {% if is_friend %}
+                    <a href="{% url 'friends:remove_friend' user.id %}" class="btn-friend btn-remove"
+                        onclick="return confirm('Удалить из друзей?')">
+                        Удалить из друзей
+                    </a>
+                    {% else %}
+                    <a href="{% url 'friends:add_friend' user.id %}" class="btn-friend btn-add">
+                        Добавить в друзья
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
 
             <nav class="profile-nav">
                 <button class="nav-btn active" data-tab="favorites">Избранное</button>
@@ -51,9 +88,11 @@
                         <div class="movie-card">
                             <div class="movie-poster-container">
                                 {% if favorite.movie.local_poster %}
-                                    <img src="{{ favorite.movie.poster_display_url }}" alt="{{ favorite.movie.movie_name }}" class="movie-poster"/>
+                                <img src="{{ favorite.movie.poster_display_url }}" alt="{{ favorite.movie.movie_name }}"
+                                    class="movie-poster" />
                                 {% else %}
-                                    <img src="{{ favorite.movie.poster_link }}" alt="{{ favorite.movie.movie_name }}" class="movie-poster"/>
+                                <img src="{{ favorite.movie.poster_link }}" alt="{{ favorite.movie.movie_name }}"
+                                    class="movie-poster" />
                                 {% endif %}
                                 <div class="movie-rating movie-rating-color">{{ favorite.movie.rating }}</div>
                                 <div class="favorite-badge">
@@ -89,12 +128,14 @@
                                     {% endfor %}
                                 </p>
                                 <div class="movie-actions">
+                                    {% if is_own_profile %}
                                     <a href="{% url 'remove_from_favorites' favorite.movie.id %}"
                                         class="action-btn remove-btn">
                                         <svg width="16" height="16" viewBox="0 0 24 24">
                                             <path fill="currentColor" d="M19 13H5v-2h14v2z" />
                                         </svg>Удалить
                                     </a>
+                                    {% endif %}
                                     <a href="{% url 'movie_detail' favorite.movie.id %}"
                                         class="action-btn details-btn">Подробнее</a>
                                 </div>
@@ -103,10 +144,17 @@
                         {% endfor %}
                         {% else %}
                         <div class="empty-user-content">
-                            <div class="empty-icon">❤️</div>
-                            <h3>Добавьте фильмы в избранное</h3>
-                            <p>Отмечайте понравившиеся фильмы сердечком</p>
+                            <h3>
+                                {% if is_own_profile %}
+                                Добавьте фильмы в избранное
+                                {% else %}
+                                У пользователя пока нет избранных фильмов
+                                {% endif %}
+                            </h3>
+                            {% if is_own_profile %}
+                            <p>Используйте "Добавить в избранное" для понравившихся фильмов</p>
                             <a href="{% url 'search' %}" class="discover-btn">Открыть каталог</a>
+                            {% endif %}
                         </div>
                         {% endif %}
                     </div>
@@ -120,9 +168,11 @@
                         <div class="movie-card">
                             <div class="movie-poster-container">
                                 {% if rating.movie.local_poster %}
-                                    <img src="{{ rating.movie.poster_display_url }}" alt="{{ rating.movie.movie_name }}" class="movie-poster"/>
+                                <img src="{{ rating.movie.poster_display_url }}" alt="{{ rating.movie.movie_name }}"
+                                    class="movie-poster" />
                                 {% else %}
-                                    <img src="{{ rating.movie.poster_link }}" alt="{{ rating.movie.movie_name }}" class="movie-poster"/>
+                                <img src="{{ rating.movie.poster_link }}" alt="{{ rating.movie.movie_name }}"
+                                    class="movie-poster" />
                                 {% endif %}
                                 <div class="movie-rating
                     {% if rating.user_rating >= 7 %}movie-user-rating-green-color
@@ -165,6 +215,7 @@
                                     {% endfor %}
                                 </p>
                                 <div class="movie-actions">
+                                    {% if is_own_profile %}
                                     {% if rating.movie.id in user_favorites_ids %}
                                     <a href="{% url 'remove_from_favorites' rating.movie.id %}"
                                         class="action-btn remove-btn">
@@ -179,6 +230,7 @@
                                         </svg>В избранное
                                     </a>
                                     {% endif %}
+                                    {% endif %}
                                     <a href="{% url 'movie_detail' rating.movie.id %}"
                                         class="action-btn details-btn">Подробнее</a>
                                 </div>
@@ -187,10 +239,17 @@
                         {% endfor %}
                         {% else %}
                         <div class="empty-user-content">
-                            <div class="empty-icon">⭐</div>
-                            <h3>Поделитесь мнением</h3>
+                            <h3>
+                                {% if is_own_profile %}
+                                Поделитесь мнением
+                                {% else %}
+                                У пользователя пока нет оценок
+                                {% endif %}
+                            </h3>
+                            {% if is_own_profile %}
                             <p>Ваши оценки помогут другим пользователям</p>
                             <a href="{% url 'search' %}" class="discover-btn">Оценить фильмы</a>
+                            {% endif %}
                         </div>
                         {% endif %}
                     </div>
@@ -198,7 +257,8 @@
             </div>
         </div>
     </main>
-    {% include "footer.html" %}
+    {% include "footer.html" with user=current_user %}
     <script src="{% static 'js/profile.js' %}"></script>
 </body>
+
 </html>

@@ -156,3 +156,102 @@
 .content-section.active {
     display: block;
 }
+
+.profile-friends {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.profile-friends h3 {
+    font-size: 1.2rem;
+    color: var(--text-color1);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.friends-count {
+    background: var(--accent-color);
+    color: white;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+}
+
+.friends-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.friend-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    width: 60px;
+}
+
+.friend-avatar {
+    width: 45px;
+    height: 45px;
+    background: var(--linear-gradient2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-bottom: 0.3rem;
+    border: 2px solid var(--accent-color);
+}
+
+.friend-name {
+    font-size: 0.7rem;
+    color: var(--text-color2);
+    text-align: center;
+    word-break: break-word;
+    max-width: 60px;
+}
+
+.no-friends {
+    color: var(--text-color3);
+    font-size: 0.9rem;
+    padding: 0.5rem;
+}
+
+.friend-actions {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.btn-friend {
+    display: inline-block;
+    padding: 0.5rem 1.5rem;
+    border-radius: 20px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.btn-add {
+    background: var(--accent-color);
+    color: white;
+}
+
+.btn-remove {
+    background: var(--red-color);
+    color: white;
+}
+
+.btn-add:hover, .btn-remove:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+}
