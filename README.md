@@ -60,12 +60,12 @@ user-based коллаборативную фильтрацию и семанти
 * Семантический поиск на русском языке
 
 ## Стек технологий
-* Бэкенд: Django 5.1.6, Python 3.12
-* База данных: PostgreSQL
-* Frontend: HTML, CSS, JavaScript, Bootstrap
-* Машинное обучение: scikit-learn, pandas, numpy
-* Семантический поиск: PyTorch, sentence-transformers, FAISS
-* Нейросетевая модель: [rubert-tiny2 (дообученная)](https://huggingface.co/cointegrated/rubert-tiny2)
+* **Бэкенд:** Django 5.1.6, Python 3.12
+* **База данных:** PostgreSQL
+* **Frontend:** HTML, CSS, JavaScript, Bootstrap
+* **Машинное обучение:** scikit-learn, pandas, numpy
+* **Семантический поиск:** PyTorch, sentence-transformers, FAISS
+* **Нейросетевая модель:** [rubert-tiny2 (дообученная)](https://huggingface.co/cointegrated/rubert-tiny2)
 
 ## Установка и запуск
 1. Клонирование репозитория
