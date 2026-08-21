@@ -3,6 +3,21 @@
 Веб-приложение на Django, реализующее три подхода к формированию рекомендаций: content-based фильтрацию, 
 user-based коллаборативную фильтрацию и семантический поиск на основе дообученной модели rubert-tiny2.
 
+![Python](https://img.shields.io/badge/python-3.12-blue?logo=python&logoColor=blue)
+![Django](https://img.shields.io/badge/django-5.1.6-green?logo=django&logoColor=blue)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-7952B3?logo=bootstrap&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?logo=postgresql&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?logo=scikit-learn&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?logo=pytorch&logoColor=white)
+
+## Содержание
+- [О проекте](#интеллектуальная-система-рекомендаций-для-просмотра-кинофильмов)
+- [Скриншоты](#скриншоты)
+- [Функциональность](#функциональность)
+- [Установка и запуск](#установка-и-запуск)
+- [Рекомендательные системы](#рекомендательные-системы)
+- [Структура проекта](#структура-проекта)
+
 ## Скриншоты
 
 <div align="center">
