@@ -3,6 +3,37 @@
 Веб-приложение на Django, реализующее три подхода к формированию рекомендаций: content-based фильтрацию, 
 user-based коллаборативную фильтрацию и семантический поиск на основе дообученной модели rubert-tiny2.
 
+## Скриншоты
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <img src="images/Home_page_unauthorized.png" alt="Главная страница" height="300"/>
+        <br/>
+        <b>Главная страница</b>
+      </td>
+      <td align="center">
+        <img src="images/Movie_page_authorized.png" alt="Детали фильма" height="300"/>
+        <br/>
+        <b>Страница фильма</b>
+      </td>
+    </tr>
+    <tr>
+      <td align="center">
+        <img src="images/Profile_page.png" alt="Профиль" height="300"/>
+        <br/>
+        <b>Профиль пользователя</b>
+      </td>
+      <td align="center">
+        <img src="images/Semantic_search_page_authorized.png" alt="Семантический поиск" height="300"/>
+        <br/>
+        <b>Семантический поиск</b>
+      </td>
+    </tr>
+  </table>
+</div>
+
 ## Функциональность
 * Регистрация и авторизация пользователей
 * Каталог фильмов с фильтрацией по жанрам и сортировкой
