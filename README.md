@@ -102,13 +102,13 @@ python manage.py runserver
 
 | Метод локтя                      | Силуэтный анализ                          | Индекс Дэвиса-Болдуина                              |
 |:--------------------------------:|:-----------------------------------------:|:---------------------------------------------------:|
-| ![Метод локтя](elbow_method.png) | ![Силуэтный анализ](silhouette_score.png) | ![Индекс Дэвиса-Болдуина](davies_bouldin_score.png) |
+| ![Метод локтя](images/elbow_method.png) | ![Силуэтный анализ](images/silhouette_score.png) | ![Индекс Дэвиса-Болдуина](images/davies_bouldin_score.png) |
 
 ## Визуализация пользователей
 
 | 2D сравнение                                       | t-SNE 2D                          | t-SNE 3D                          | 3D визуализация               |
 |:--------------------------------------------------:|:---------------------------------:|:---------------------------------:|:-----------------------------:|
-| ![2D сравнение](users_generated_2d_comparison.png) | ![t-SNE 2D](users_t-SNE%202D.png) | ![t-SNE 3D](users_t-SNE%203D.png) | ![3D](users_generated_3d.png) |
+| ![2D сравнение](images/users_generated_2d_comparison.png) | ![t-SNE 2D](images/users_t-SNE%202D.png) | ![t-SNE 3D](images/users_t-SNE%203D.png) | ![3D](images/users_generated_3d.png) |
 
 ### 3. Семантический поиск
 Модель: [cointegrated/rubert-tiny2](https://huggingface.co/cointegrated/rubert-tiny2)(российская модель от SberDevices).
