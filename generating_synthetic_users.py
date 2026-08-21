@@ -274,7 +274,7 @@ class Visualizer:
         plt.xlabel("k - количество кластеров")
         plt.ylabel("WCSS")
         plt.grid()
-        plt.savefig("elbow_method.png", dpi=300, bbox_inches="tight")
+        plt.savefig("images/elbow_method.png", dpi=300, bbox_inches="tight")
         plt.show()
 
     # оценка по индексу Дэвиса-Булдина
@@ -296,7 +296,7 @@ class Visualizer:
         plt.xlabel("k - количество кластеров")
         plt.ylabel("Индекс Дэвиса-Булдина (Davies-Boulding Index)")
         plt.grid()
-        plt.savefig("davies_bouldin_score.png", dpi=300, bbox_inches="tight")
+        plt.savefig("images/davies_bouldin_score.png", dpi=300, bbox_inches="tight")
         plt.show()
 
     # оценка по силуэтному анализу
@@ -317,7 +317,7 @@ class Visualizer:
         plt.xlabel("k - количество кластеров")
         plt.ylabel("Силуэтный коэффициент (Silhouette Score)")
         plt.grid()
-        plt.savefig("silhouette_score.png", dpi=300, bbox_inches="tight")
+        plt.savefig("images/silhouette_score.png", dpi=300, bbox_inches="tight")
         plt.show()
 
     # вывод диаграммы реальных кластеров пользователей
@@ -331,7 +331,7 @@ class Visualizer:
         plt.title(title)
         plt.xlabel(x)
         plt.ylabel(y)
-        plt.savefig("users_generated_2d.png", dpi=300, bbox_inches="tight")
+        plt.savefig("images/users_generated_2d.png", dpi=300, bbox_inches="tight")
         plt.show()
 
     # вывод диаграммы реальных и предсказанных кластеров пользователей
@@ -381,7 +381,7 @@ class Visualizer:
         axes[1].set_title("Predicted Clusters")
         plt.xlabel(x)
         plt.ylabel(y)
-        plt.savefig("users_generated_2d_comparison.png", dpi=300, bbox_inches="tight")
+        plt.savefig("images/users_generated_2d_comparison.png", dpi=300, bbox_inches="tight")
         plt.show()
 
     # вывод диаграммы реальных кластеров пользователей в трехмерном измерении
@@ -398,7 +398,7 @@ class Visualizer:
         ax.set_xlabel(x)
         ax.set_ylabel(y)
         ax.set_zlabel(z)
-        plt.savefig("users_generated_3d.png", dpi=300, bbox_inches="tight")
+        plt.savefig("images/users_generated_3d.png", dpi=300, bbox_inches="tight")
         plt.show()
 
 
