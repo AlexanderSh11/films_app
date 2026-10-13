@@ -1,15 +1,15 @@
 from django.urls import path
+
 from app.views import (
-    SearchPageView,
     HomePageView,
+    SearchPageView,
     add_to_favorites,
     favorites,
-    ratings,
     movie_detail,
     rate_movie,
+    ratings,
     remove_from_favorites,
 )
-
 
 urlpatterns = [
     path("search/", SearchPageView.as_view(), name="search"),

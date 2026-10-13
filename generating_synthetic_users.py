@@ -1,14 +1,22 @@
-from sklearn.metrics import confusion_matrix
-from scipy.optimize import linear_sum_assignment
 import os
 import random
+
 import django
-from matplotlib import pyplot as plt
 import numpy as np
-from sklearn.datasets import make_blobs
 import pandas as pd
-from sklearn.cluster import KMeans
 import seaborn as sns
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import User
+from django.db import transaction
+from matplotlib import pyplot as plt
+from scipy.optimize import linear_sum_assignment
+from sklearn.cluster import KMeans
+from sklearn.datasets import make_blobs
+from sklearn.metrics import confusion_matrix
+
+from app.models import Favorite, MovieRating
+
+SAVE_IMAGES_DIR = "diagrams\\images"
 
 
 # класс Кластера
@@ -168,7 +176,7 @@ class UsersGenerator:
                 ratings = {m.id: random.randint(4, 7) for m, _ in rated}
             else:
                 ratings = {
-                    m.id: int(round(1 + (s - min_s) / (max_s - min_s) * 9))
+                    m.id: round(1 + (s - min_s) / (max_s - min_s) * 9)
                     for m, s in rated
                 }
 
@@ -198,10 +206,6 @@ class UsersGenerator:
             print(f"  Фильм ID {mid}: оценка {r}")
 
     def save_data_to_db(self, user_data):
-        from django.contrib.auth.models import User
-        from django.contrib.auth.hashers import make_password
-        from django.db import transaction
-        from app.models import Favorite, MovieRating
 
         # для обеспечения целостности данных
         with transaction.atomic():
@@ -225,7 +229,7 @@ class UsersGenerator:
                     favorites_created = 0
                     for movie_id in user_info["favorites"]:
                         try:
-                            favorite, fav_created = Favorite.objects.get_or_create(
+                            _favorite, fav_created = Favorite.objects.get_or_create(
                                 user=user, movie_id=movie_id
                             )
                             if fav_created:
@@ -239,7 +243,7 @@ class UsersGenerator:
                     ratings_created = 0
                     for movie_id, rating_value in user_info["ratings"].items():
                         try:
-                            rating, rating_created = MovieRating.objects.get_or_create(
+                            _rating, rating_created = MovieRating.objects.get_or_create(
                                 user=user,
                                 movie_id=movie_id,
                                 defaults={"user_rating": rating_value},
@@ -274,7 +278,7 @@ class Visualizer:
         plt.xlabel("k - количество кластеров")
         plt.ylabel("WCSS")
         plt.grid()
-        plt.savefig("elbow_method.png", dpi=300, bbox_inches="tight")
+        plt.savefig(f"{SAVE_IMAGES_DIR}\\elbow_method.png", dpi=300, bbox_inches="tight")
         plt.show()
 
     # оценка по индексу Дэвиса-Булдина
@@ -296,7 +300,7 @@ class Visualizer:
         plt.xlabel("k - количество кластеров")
         plt.ylabel("Индекс Дэвиса-Булдина (Davies-Boulding Index)")
         plt.grid()
-        plt.savefig("davies_bouldin_score.png", dpi=300, bbox_inches="tight")
+        plt.savefig(f"{SAVE_IMAGES_DIR}\\davies_bouldin_score.png", dpi=300, bbox_inches="tight")
         plt.show()
 
     # оценка по силуэтному анализу
@@ -317,7 +321,7 @@ class Visualizer:
         plt.xlabel("k - количество кластеров")
         plt.ylabel("Силуэтный коэффициент (Silhouette Score)")
         plt.grid()
-        plt.savefig("silhouette_score.png", dpi=300, bbox_inches="tight")
+        plt.savefig(f"{SAVE_IMAGES_DIR}\\silhouette_score.png", dpi=300, bbox_inches="tight")
         plt.show()
 
     # вывод диаграммы реальных кластеров пользователей
@@ -331,7 +335,7 @@ class Visualizer:
         plt.title(title)
         plt.xlabel(x)
         plt.ylabel(y)
-        plt.savefig("users_generated_2d.png", dpi=300, bbox_inches="tight")
+        plt.savefig(f"{SAVE_IMAGES_DIR}\\users_generated_2d.png", dpi=300, bbox_inches="tight")
         plt.show()
 
     # вывод диаграммы реальных и предсказанных кластеров пользователей
@@ -345,7 +349,7 @@ class Visualizer:
         colors=None,
         centers=None,
     ):
-        fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+        _fig, axes = plt.subplots(1, 2, figsize=(14, 6))
         if colors is not None:
             axes[0].scatter(df[x], df[y], c=colors, s=100)
             axes[1].scatter(df[x], df[y], c=colors, s=100)
@@ -381,7 +385,7 @@ class Visualizer:
         axes[1].set_title("Predicted Clusters")
         plt.xlabel(x)
         plt.ylabel(y)
-        plt.savefig("users_generated_2d_comparison.png", dpi=300, bbox_inches="tight")
+        plt.savefig(f"{SAVE_IMAGES_DIR}\\users_generated_2d_comparison.png", dpi=300, bbox_inches="tight")
         plt.show()
 
     # вывод диаграммы реальных кластеров пользователей в трехмерном измерении
@@ -398,7 +402,7 @@ class Visualizer:
         ax.set_xlabel(x)
         ax.set_ylabel(y)
         ax.set_zlabel(z)
-        plt.savefig("users_generated_3d.png", dpi=300, bbox_inches="tight")
+        plt.savefig(f"{SAVE_IMAGES_DIR}\\users_generated_3d.png", dpi=300, bbox_inches="tight")
         plt.show()
 
 

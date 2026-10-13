@@ -1,4 +1,5 @@
 from django.urls import path
+
 from friends.views import add_friend, remove_friend
 
 app_name = "friends"

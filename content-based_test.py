@@ -6,9 +6,10 @@ import django
 
 django.setup()
 
-from django.contrib.auth.models import User  # noqa: E402
-from app.models import Movie, Favorite, MovieRating  # noqa: E402
-from content_based import MovieRecommender  # noqa: E402
+from django.contrib.auth.models import User
+
+from app.models import Favorite, Movie, MovieRating
+from content_based import MovieRecommender
 
 
 def create_test_user(username, password="testpass123"):
@@ -138,8 +139,6 @@ def run_test_scenario(scenario_name, user_id, favorites=None, ratings=None):
     print_user_preferences(recommender)
 
     print_recommendations(recommender, n=10)
-
-    return
 
 
 # Сценарий 1: недостаточная история

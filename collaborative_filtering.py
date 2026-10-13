@@ -1,16 +1,19 @@
 import os
+
 import django
-from django.core.cache import cache
 import numpy as np
 import pandas as pd
+from django.core.cache import cache
 from sklearn.metrics import pairwise_distances
 from sklearn.model_selection import train_test_split
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myapp.settings")
 django.setup()
 
-from django.contrib.auth.models import User  # noqa: E402
-from app.models import Movie, Favorite, MovieRating  # noqa: E402
+from django.contrib.auth.models import User
+
+from app.models import Favorite, Movie, MovieRating
+
 
 class MovieRecommender:
     def __init__(self):

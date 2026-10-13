@@ -1,10 +1,11 @@
 import os
+from collections import defaultdict
+
 import django
-from django.core.cache import cache
-from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
-from collections import defaultdict
+from django.core.cache import cache
+from sentence_transformers import SentenceTransformer
 
 # Глобальные переменные для кэширования
 _MODEL = None

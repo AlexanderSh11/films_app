@@ -1,7 +1,9 @@
 from collections import Counter
+
 from django.core.cache import cache
 from django.db.models import Avg
-from app.models import Movie, Favorite, MovieRating
+
+from app.models import Favorite, Movie, MovieRating
 
 
 class MovieRecommender:
