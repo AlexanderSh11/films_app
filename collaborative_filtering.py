@@ -7,6 +7,8 @@ from django.core.cache import cache
 from sklearn.metrics import pairwise_distances
 from sklearn.model_selection import train_test_split
 
+from utils.timer import timer
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myapp.settings")
 django.setup()
 
@@ -39,19 +41,26 @@ class MovieRecommender:
             self.__dict__.update(cached_model)
             return self.user_similarity
 
-        train_data, test_data = self.split_data(test_size=0.2, verbose=verbose)
-        self.train_data_matrix = np.zeros((self.n_users, self.n_movies))
-        for line in train_data.itertuples():
-            self.train_data_matrix[line.userIndex, line.movieIndex] = line.rating
+        print("Обучение модели коллаборативной фильтрации")
 
-        self.test_data_matrix = np.zeros((self.n_users, self.n_movies))
-        for line in test_data.itertuples():
-            self.test_data_matrix[line.userIndex, line.movieIndex] = line.rating
+        with timer("Загрузка данных"):
+            train_data, test_data = self.split_data(test_size=0.2, verbose=verbose)
+
+        with timer("Заполнение train-матрицы"):
+            self.train_data_matrix = np.zeros((self.n_users, self.n_movies))
+            for line in train_data.itertuples():
+                self.train_data_matrix[line.userIndex, line.movieIndex] = line.rating
+
+        with timer("Заполнение test-матрицы"):
+            self.test_data_matrix = np.zeros((self.n_users, self.n_movies))
+            for line in test_data.itertuples():
+                self.test_data_matrix[line.userIndex, line.movieIndex] = line.rating
 
         # считаем схожесть через косинусное расстояние для пользователей
-        self.user_similarity = 1 - pairwise_distances(
-            self.train_data_matrix, metric="cosine"
-        )
+        with timer(f"Расчет схожести ({self.n_users}x{self.n_users})"):
+            self.user_similarity = 1 - pairwise_distances(
+                self.train_data_matrix, metric="cosine"
+            )
 
         if verbose:
             print(f"Mean similarity: {np.mean(self.user_similarity):.3f}")
@@ -149,25 +158,26 @@ class MovieRecommender:
         Нет нормализации данных
         Не учитываются смещения пользователей
         """
-        try:
-            # Простое усреднение оценок top наиболее похожих пользователей
-            top_similar_ratings = np.zeros((self.n_users, top, self.n_movies))
+        with timer("Предсказание based_naive"):
+            try:
+                # Простое усреднение оценок top наиболее похожих пользователей
+                top_similar_ratings = np.zeros((self.n_users, top, self.n_movies))
 
-            for i in range(self.n_users):
-                # сортируем по уменьшению схожести
-                top_sim_users = self.user_similarity[i].argsort()[::-1][1 : top + 1]
-                top_similar_ratings[i] = self.train_data_matrix[top_sim_users]
+                for i in range(self.n_users):
+                    # сортируем по уменьшению схожести
+                    top_sim_users = self.user_similarity[i].argsort()[::-1][1 : top + 1]
+                    top_similar_ratings[i] = self.train_data_matrix[top_sim_users]
 
-            pred = np.zeros((self.n_users, self.n_movies))
-            for i in range(self.n_users):
-                pred[i] = top_similar_ratings[i].sum(axis=0) / top
+                pred = np.zeros((self.n_users, self.n_movies))
+                for i in range(self.n_users):
+                    pred[i] = top_similar_ratings[i].sum(axis=0) / top
 
-            return pred
-        except ValueError:
-            print(
-                f"Параметр top={top} выходит за пределы top_similar_ratings.shape[0]={top_similar_ratings.shape[0]}"
-            )
-            return False
+                return pred
+            except ValueError:
+                print(
+                    f"Параметр top={top} выходит за пределы top_similar_ratings.shape[0]={top_similar_ratings.shape[0]}"
+                )
+                return False
 
     def predict_user_based_k_fract_mean(self, top=5):
         """
@@ -184,75 +194,76 @@ class MovieRecommender:
         - r_vi - оценка пользователя v для фильма i
         - mean_v - средняя оценка пользователя v
         """
-        try:
-            # Вычисляем средние оценки для каждого пользователя
-            user_mean_ratings = np.zeros(self.n_users)
-            for i in range(self.n_users):
-                user_ratings = self.train_data_matrix[i]
-                rated_movies = user_ratings > 0  # только ненулевые оценки
-                if np.any(rated_movies):
-                    user_mean_ratings[i] = np.mean(user_ratings[rated_movies])
-                else:
-                    user_mean_ratings[i] = 0  # если нет оценок
-
-            pred = np.zeros((self.n_users, self.n_movies))
-
-            for i in range(self.n_users):  # для каждого пользователя
-                # Находим top наиболее похожих пользователей (исключая самого себя)
-                # Используем [1:top+1] чтобы пропустить самого пользователя (схожесть = 1)
-                similar_users_idx = self.user_similarity[i].argsort()[::-1][1 : top + 1]
-
-                # Получаем схожести с этими пользователями
-                similarities = self.user_similarity[i][similar_users_idx]
-
-                # Средняя оценка текущего пользователя
-                current_user_mean = user_mean_ratings[i]
-
-                # Временные массивы для вычислений
-                weighted_sum = np.zeros(self.n_movies)
-                similarity_sum = np.zeros(self.n_movies)
-
-                for j, sim_user_idx in enumerate(similar_users_idx):
-                    similarity = similarities[j]
-
-                    # Оценки похожего пользователя
-                    similar_user_ratings = self.train_data_matrix[sim_user_idx]
-
-                    # Средняя оценка похожего пользователя
-                    similar_user_mean = user_mean_ratings[sim_user_idx]
-
-                    # Нормализованные оценки (вычитаем среднее)
-                    normalized_ratings = similar_user_ratings - similar_user_mean
-
-                    # Маска только для реальных оценок
-                    valid_ratings_mask = similar_user_ratings > 0
-
-                    # Взвешенная сумма с учетом схожести
-                    weighted_sum[valid_ratings_mask] += (
-                        similarity * normalized_ratings[valid_ratings_mask]
-                    )
-                    similarity_sum[valid_ratings_mask] += np.abs(similarity)
-
-                # Вычисляем предсказания
-                for movie_idx in range(self.n_movies):
-                    if similarity_sum[movie_idx] > 0:
-                        # pred = mean_u + sum(sim * (r - mean_v)) / sum|sim|
-                        pred[i, movie_idx] = (
-                            current_user_mean
-                            + weighted_sum[movie_idx] / similarity_sum[movie_idx]
-                        )
+        with timer("Предсказание k_fract_mean"):
+            try:
+                # Вычисляем средние оценки для каждого пользователя
+                user_mean_ratings = np.zeros(self.n_users)
+                for i in range(self.n_users):
+                    user_ratings = self.train_data_matrix[i]
+                    rated_movies = user_ratings > 0  # только ненулевые оценки
+                    if np.any(rated_movies):
+                        user_mean_ratings[i] = np.mean(user_ratings[rated_movies])
                     else:
-                        # Если нет похожих пользователей, оценивших этот фильм, используем среднее пользователя
-                        pred[i, movie_idx] = current_user_mean
+                        user_mean_ratings[i] = 0  # если нет оценок
 
-                # Ограничиваем предсказания разумными пределами
-                pred[i] = np.clip(pred[i], 0, 10)
+                pred = np.zeros((self.n_users, self.n_movies))
 
-            return pred
+                for i in range(self.n_users):  # для каждого пользователя
+                    # Находим top наиболее похожих пользователей (исключая самого себя)
+                    # Используем [1:top+1] чтобы пропустить самого пользователя (схожесть = 1)
+                    similar_users_idx = self.user_similarity[i].argsort()[::-1][1 : top + 1]
 
-        except Exception as e:
-            print(f"Ошибка в predict_user_based_k_fract_mean: {e}")
-            return False
+                    # Получаем схожести с этими пользователями
+                    similarities = self.user_similarity[i][similar_users_idx]
+
+                    # Средняя оценка текущего пользователя
+                    current_user_mean = user_mean_ratings[i]
+
+                    # Временные массивы для вычислений
+                    weighted_sum = np.zeros(self.n_movies)
+                    similarity_sum = np.zeros(self.n_movies)
+
+                    for j, sim_user_idx in enumerate(similar_users_idx):
+                        similarity = similarities[j]
+
+                        # Оценки похожего пользователя
+                        similar_user_ratings = self.train_data_matrix[sim_user_idx]
+
+                        # Средняя оценка похожего пользователя
+                        similar_user_mean = user_mean_ratings[sim_user_idx]
+
+                        # Нормализованные оценки (вычитаем среднее)
+                        normalized_ratings = similar_user_ratings - similar_user_mean
+
+                        # Маска только для реальных оценок
+                        valid_ratings_mask = similar_user_ratings > 0
+
+                        # Взвешенная сумма с учетом схожести
+                        weighted_sum[valid_ratings_mask] += (
+                            similarity * normalized_ratings[valid_ratings_mask]
+                        )
+                        similarity_sum[valid_ratings_mask] += np.abs(similarity)
+
+                    # Вычисляем предсказания
+                    for movie_idx in range(self.n_movies):
+                        if similarity_sum[movie_idx] > 0:
+                            # pred = mean_u + sum(sim * (r - mean_v)) / sum|sim|
+                            pred[i, movie_idx] = (
+                                current_user_mean
+                                + weighted_sum[movie_idx] / similarity_sum[movie_idx]
+                            )
+                        else:
+                            # Если нет похожих пользователей, оценивших этот фильм, используем среднее пользователя
+                            pred[i, movie_idx] = current_user_mean
+
+                    # Ограничиваем предсказания разумными пределами
+                    pred[i] = np.clip(pred[i], 0, 10)
+
+                return pred
+
+            except Exception as e:
+                print(f"Ошибка в predict_user_based_k_fract_mean: {e}")
+                return False
 
     def rmse(self, pred, actual):
         # Корень из среднеквадратичной ошибки
