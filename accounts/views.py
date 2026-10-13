@@ -1,11 +1,11 @@
 from django.contrib.auth import logout
-from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.db.models import Q
-from django.shortcuts import redirect, render, get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 
-from app.models import Favorite, MovieRating
 from accounts.forms import CustomUserCreationForm
+from app.models import Favorite, MovieRating
 from friends.models import Friendship
 
 
@@ -48,10 +48,8 @@ def profile(request, user_id):
     is_friend = False
     if request.user.is_authenticated and request.user != profile_user:
         is_friend = Friendship.objects.filter(
-            (
                 Q(from_user=request.user, to_user=profile_user)
                 | Q(from_user=profile_user, to_user=request.user)
-            )
         ).exists()
 
     context = {

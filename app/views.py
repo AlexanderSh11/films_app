@@ -1,25 +1,25 @@
 from collections import defaultdict
 
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
-from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.views.generic import TemplateView
-from django.contrib.auth.models import User
 
 from app.forms import RatingForm
-from app.models import Movie, Favorite, MovieRating
-from myapp.constants import (
-    TIME_TO_CASH,
-    MOVIES_TO_RECOMMEND,
-    MOVIES_FOR_GENRE,
-    MOVIES_TO_SEARCH,
-)
-from movie_searcher import search_movies
-from content_based import MovieRecommender as content_based_recommender
+from app.models import Favorite, Movie, MovieRating
 from collaborative_filtering import MovieRecommender as user_to_user_recommender
+from content_based import MovieRecommender as content_based_recommender
 from hybrid_recommender import HybridRecommender as hybrid_recommender
+from movie_searcher import search_movies
+from myapp.constants import (
+    MOVIES_FOR_GENRE,
+    MOVIES_TO_RECOMMEND,
+    MOVIES_TO_SEARCH,
+    TIME_TO_CASH,
+)
 
 
 class SearchPageView(TemplateView):
@@ -46,7 +46,7 @@ class SearchPageView(TemplateView):
 
             if filtered_movie_ids:
                 # Ищем среди отфильтрованных по жанру фильмов
-                movies, scores = search_movies(
+                movies, _scores = search_movies(
                     query=semantic_query,
                     movie_ids=filtered_movie_ids,
                     top_k=MOVIES_TO_SEARCH,
@@ -217,7 +217,7 @@ def remove_from_favorites(request, movie_id):
 @login_required
 def rate_movie(request, movie_id):
     movie = get_object_or_404(Movie, pk=movie_id)
-    rating, created = MovieRating.objects.get_or_create(user=request.user, movie=movie)
+    rating, _created = MovieRating.objects.get_or_create(user=request.user, movie=movie)
 
     if request.method == "POST":
         form = RatingForm(request.POST, instance=rating)

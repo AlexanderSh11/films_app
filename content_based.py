@@ -1,7 +1,10 @@
 from collections import Counter
+
 from django.core.cache import cache
 from django.db.models import Avg
-from app.models import Movie, Favorite, MovieRating
+
+from app.models import Favorite, Movie, MovieRating
+from utils.timer import timer
 
 
 class MovieRecommender:
@@ -88,7 +91,8 @@ class MovieRecommender:
         if cached:
             return cached
 
-        genre_prefs, director_prefs, country_prefs = self.get_user_preferences()
+        with timer("Построение профиля пользователя"):
+            genre_prefs, director_prefs, country_prefs = self.get_user_preferences()
         # print("Веса жанров:\n", genre_prefs, sep="")
         # print()
         # print("Веса режиссеров:\n", director_prefs, sep="")
@@ -98,51 +102,54 @@ class MovieRecommender:
         if genre_prefs is None or director_prefs is None or country_prefs is None:
             return []
 
-        # получаем все фильмы, которые пользователь еще не добавлял в избранное
-        excluded_ids = Favorite.objects.filter(user=self.user).values_list(
-            "movie_id", flat=True
-        )
-        all_movies = Movie.objects.exclude(id__in=excluded_ids).prefetch_related(
-            "genre", "director", "country"
-        )
+        with timer("Загрузка фильмов из БД"):
+            # получаем все фильмы, которые пользователь еще не добавлял в избранное
+            excluded_ids = Favorite.objects.filter(user=self.user).values_list(
+                "movie_id", flat=True
+            )
+            all_movies = Movie.objects.exclude(id__in=excluded_ids).prefetch_related(
+                "genre", "director", "country"
+            )
 
-        # создаем список для хранения фильмов. score - показатель рекомендации: чем выше, тем более подходящий пользователю
-        scored_movies = []
+        with timer(f"Расчёт score для {len(all_movies)} фильмов"):
+            # создаем список для хранения фильмов. score - показатель рекомендации: чем выше, тем более подходящий пользователю
+            scored_movies = []
 
-        for movie in all_movies:
-            movie_genres = {g.name.lower() for g in movie.genre.all()}
-            movie_directors = {d.name.lower() for d in movie.director.all()}
-            movie_countries = {c.name.lower() for c in movie.country.all()}
-            score = 0
-            # оценка по жанрам
-            for genre, pref in genre_prefs.items():
-                # вычисляем оценку на основе совпадения жанров
-                if genre in movie_genres:
-                    score += pref * 0.6
-            # оценка по режиссерам
-            for director, pref in director_prefs.items():
-                # вычисляем оценку на основе совпадения режиссеров
-                if director in movie_directors:
-                    score += pref * 0.4
-            # оценка по странам
-            for country, pref in country_prefs.items():
-                # вычисляем оценку на основе совпадения стран
-                if country in movie_countries:
-                    score += pref * 0.3
+            for movie in all_movies:
+                movie_genres = {g.name.lower() for g in movie.genre.all()}
+                movie_directors = {d.name.lower() for d in movie.director.all()}
+                movie_countries = {c.name.lower() for c in movie.country.all()}
+                score = 0
+                # оценка по жанрам
+                for genre, pref in genre_prefs.items():
+                    # вычисляем оценку на основе совпадения жанров
+                    if genre in movie_genres:
+                        score += pref * 0.6
+                # оценка по режиссерам
+                for director, pref in director_prefs.items():
+                    # вычисляем оценку на основе совпадения режиссеров
+                    if director in movie_directors:
+                        score += pref * 0.4
+                # оценка по странам
+                for country, pref in country_prefs.items():
+                    # вычисляем оценку на основе совпадения стран
+                    if country in movie_countries:
+                        score += pref * 0.3
 
-            # учитываем рейтинг фильма
-            if movie.rating:
-                score *= movie.rating / 10  # нормализуем рейтинг
+                # учитываем рейтинг фильма
+                if movie.rating:
+                    score *= movie.rating / 10  # нормализуем рейтинг
 
-            if score > 0:
-                scored_movies.append((movie, score))
+                if score > 0:
+                    scored_movies.append((movie, score))
 
-        # сортируем по убыванию оценки
-        scored_movies.sort(key=lambda x: x[1], reverse=True)
-        # print("Фильмы с оценками score:")
-        # for movie in scored_movies:
-        #    print(movie)
-        # возвращаем топ-N фильмов
-        recommendations = [movie for movie, score in scored_movies[:n]]
-        cache.set(cache_key, recommendations, timeout=60 * 1)
+        with timer("Сортировка и кэширование"):
+            # сортируем по убыванию оценки
+            scored_movies.sort(key=lambda x: x[1], reverse=True)
+            # print("Фильмы с оценками score:")
+            # for movie in scored_movies:
+            #    print(movie)
+            # возвращаем топ-N фильмов
+            recommendations = [movie for movie, score in scored_movies[:n]]
+            cache.set(cache_key, recommendations, timeout=60 * 1)
         return recommendations

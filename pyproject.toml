@@ -1,0 +1,6 @@
+[tool.ruff.lint]
+ignore = ["BLE001"]
+
+[tool.ruff.lint.per-file-ignores]
+"app/forms.py" = ["RUF012"]
+"app/admin.py" = ["RUF012"]

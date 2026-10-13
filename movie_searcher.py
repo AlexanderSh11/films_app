@@ -1,10 +1,13 @@
 import os
+from collections import defaultdict
+
 import django
-from django.core.cache import cache
-from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
-from collections import defaultdict
+from django.core.cache import cache
+from sentence_transformers import SentenceTransformer
+
+from utils.timer import timer
 
 # Глобальные переменные для кэширования
 _MODEL = None
@@ -13,9 +16,10 @@ _ALL_MOVIE_IDS = None
 _ALL_EMBEDDINGS = None
 _ALL_EMBEDDINGS_DICT = None
 
+CACHE_TIME = 60 * 5
+
 
 def load_model_and_index():
-    """Загружает модель и индекс при первом вызове"""
     global _MODEL, _INDEX, _ALL_MOVIE_IDS, _ALL_EMBEDDINGS, _ALL_EMBEDDINGS_DICT
 
     _MODEL = cache.get("semantic_model")
@@ -39,62 +43,88 @@ def load_model_and_index():
 
     index_path = "movie_index.faiss"
     ids_path = "movie_ids.npy"
+    embeddings_path = "movie_embeddings.npy"
 
-    if os.path.exists(index_path) and os.path.exists(ids_path):
+    # Проверяем индекс, ID и эмбеддинги
+    need_rebuild = (
+        _INDEX is None
+        or _ALL_MOVIE_IDS is None
+        or _ALL_EMBEDDINGS is None
+        or not os.path.exists(index_path)
+        or not os.path.exists(ids_path)
+        or not os.path.exists(embeddings_path)
+    )
+
+    if need_rebuild:
+        print("Индекс или эмбеддинги не найдены")
+        build_faiss_index(force_rebuild=True)
+    else:
         _INDEX = faiss.read_index(index_path)
         _ALL_MOVIE_IDS = np.load(ids_path)
-        cache.set("semantic_model", _MODEL, 60 * 5)
-        cache.set("semantic_index", _INDEX, 60 * 5)
-        cache.set("semantic_ids", _ALL_MOVIE_IDS, 60 * 5)
-        print(f"Индекс загружен, содержит {len(_ALL_MOVIE_IDS)} фильмов")
-    else:
-        print("Индекс не найден")
-        build_faiss_index(force_rebuild=True)
+        _ALL_EMBEDDINGS = np.load(embeddings_path)
+        _ALL_EMBEDDINGS_DICT = {
+            movie_id: _ALL_EMBEDDINGS[i]
+            for i, movie_id in enumerate(_ALL_MOVIE_IDS)
+        }
+        print(f"Индекс и эмбеддинги загружены: {len(_ALL_MOVIE_IDS)} фильмов")
 
-    if _ALL_EMBEDDINGS is None or _ALL_EMBEDDINGS_DICT is None:
-        embeddings_path = "movie_embeddings.npy"
-        if os.path.exists(embeddings_path):
-            _ALL_EMBEDDINGS = np.load(embeddings_path)
-            # Создаем словарь {movie_id: embedding}
-            _ALL_EMBEDDINGS_DICT = {
-                movie_id: _ALL_EMBEDDINGS[i]
-                for i, movie_id in enumerate(_ALL_MOVIE_IDS)
-            }
-            cache.set("semantic_embeddings", _ALL_EMBEDDINGS, 60 * 5)
-            cache.set("semantic_embeddings_dict", _ALL_EMBEDDINGS_DICT, 60 * 5)
-            print(f"Эмбеддинги загружены: {_ALL_EMBEDDINGS.shape}")
-        else:
-            print("Эмбеддинги не найдены")
-            build_embeddings_cache()
+    # Сохраняем в кэш
+    cache.set("semantic_model", _MODEL, CACHE_TIME)
+    cache.set("semantic_index", _INDEX, CACHE_TIME)
+    cache.set("semantic_ids", _ALL_MOVIE_IDS, CACHE_TIME)
+    cache.set("semantic_embeddings", _ALL_EMBEDDINGS, CACHE_TIME)
+    cache.set("semantic_embeddings_dict", _ALL_EMBEDDINGS_DICT, CACHE_TIME)
 
 
-def build_embeddings_cache():
+def build_faiss_index(force_rebuild=False):
+    """Создает индекс FAISS и эмбеддинги для всех фильмов"""
+    global _ALL_EMBEDDINGS, _ALL_EMBEDDINGS_DICT, _ALL_MOVIE_IDS, _INDEX
 
     from app.models import Movie
 
+    index_path = "movie_index.faiss"
+    ids_path = "movie_ids.npy"
+    embeddings_path = "movie_embeddings.npy"
+
+    if not force_rebuild and os.path.exists(index_path) and os.path.exists(ids_path):
+        return
+
+    model_path = os.path.join(
+        os.path.dirname(__file__), "fine_tuned_model\\fine_tuned_rubert_tiny2"
+    )
+    model = SentenceTransformer(model_path)
+
+    print("Создание текстового описания для каждого фильма")
     movies = Movie.objects.prefetch_related("genre", "director", "country").all()
     movie_texts = []
     movie_ids = []
-
     for movie in movies:
         text = get_movie_text_representation(movie)
         movie_texts.append(text)
         movie_ids.append(movie.id)
 
-    # Создаем эмбеддинги
-    embeddings = _MODEL.encode(
-        movie_texts, convert_to_numpy=True, show_progress_bar=True
-    )
+    with timer("Генерация эмбеддингов для всех фильмов"):
+        embeddings = model.encode(
+            movie_texts, convert_to_numpy=True, show_progress_bar=True
+        )
 
-    # Сохраняем
-    np.save("movie_embeddings.npy", embeddings)
-    np.save("movie_ids_embeddings.npy", np.array(movie_ids))
+    with timer("Построение FAISS-индекса"):
+        index = faiss.IndexFlatL2(embeddings.shape[1])
+        index.add(embeddings)
 
-    global _ALL_EMBEDDINGS, _ALL_EMBEDDINGS_DICT
+    # Сохраняем на диск
+    faiss.write_index(index, index_path)
+    np.save(ids_path, np.array(movie_ids))
+    np.save(embeddings_path, embeddings)
+
+    # Заполняем глобальные переменные
+    _INDEX = index
+    _ALL_MOVIE_IDS = np.array(movie_ids)
     _ALL_EMBEDDINGS = embeddings
     _ALL_EMBEDDINGS_DICT = {mid: embeddings[i] for i, mid in enumerate(movie_ids)}
 
-    print(f"Кэш эмбеддингов создан для {len(movie_ids)} фильмов")
+    print(f"Индекс успешно создан и сохранен. Содержит {index.ntotal} фильмов")
+    return index
 
 
 def get_movie_text_representation(movie):
@@ -184,8 +214,9 @@ def search_movies(query, top_k=5, movie_ids=None):
 
     # Загружаем модель и индекс (если ещё не загружены)
     load_model_and_index()
-    # Создаем эмбеддинг из запроса
-    query_embedding = _MODEL.encode([query], convert_to_numpy=True)
+    with timer("Преобразование запроса в эмбеддинг"):
+        # Создаем эмбеддинг из запроса
+        query_embedding = _MODEL.encode([query], convert_to_numpy=True)
 
     # Определяем, по какому набору ID ищем
     if movie_ids is not None:
@@ -208,20 +239,22 @@ def search_movies(query, top_k=5, movie_ids=None):
         temp_index = faiss.IndexFlatL2(embeddings.shape[1])
         temp_index.add(embeddings)
 
-        # Ищем
-        distances, indices = temp_index.search(
-            query_embedding, min(top_k, len(valid_movie_ids))
-        )
+        with timer("Поиск в FAISS"):
+            # Ищем
+            distances, indices = temp_index.search(
+                query_embedding, min(top_k, len(valid_movie_ids))
+            )
 
         # Получаем ID результатов в порядке релевантности
         result_ids = [valid_movie_ids[i] for i in indices[0]]
         result_distances = distances[0]
 
     else:
-        # Поиск по всему индексу
-        distances, indices = _INDEX.search(query_embedding, top_k)
-        result_ids = [_ALL_MOVIE_IDS[i] for i in indices[0]]
-        result_distances = distances[0]
+        with timer("Поиск в FAISS"):
+            # Поиск по всему индексу
+            distances, indices = _INDEX.search(query_embedding, top_k)
+            result_ids = [_ALL_MOVIE_IDS[i] for i in indices[0]]
+            result_distances = distances[0]
 
     # Получаем фильмы из БД
     movies = Movie.objects.filter(id__in=result_ids).prefetch_related(
@@ -258,48 +291,6 @@ def search_movies(query, top_k=5, movie_ids=None):
     final_distances = [boosted_distances[i] for i in sorted_indices]
 
     return final_movies, final_distances
-
-
-def build_faiss_index(force_rebuild=False):
-    """Создает индекс FAISS для всех фильмов"""
-    from app.models import Movie
-
-    index_path = "movie_index.faiss"
-    ids_path = "movie_ids.npy"
-
-    # Проверяем существует ли уже индекс
-    if not force_rebuild and os.path.exists(index_path) and os.path.exists(ids_path):
-        return
-
-    # Загружаем модель cointegrated/rubert-tiny2
-    model_path = os.path.join(
-        os.path.dirname(__file__), "fine_tuned_model\\fine_tuned_rubert_tiny2"
-    )
-    model = SentenceTransformer(model_path)
-
-    print("Создание текстового описания для каждого фильма")
-    movies = Movie.objects.prefetch_related("genre", "director", "country").all()
-    movie_texts = []
-    movie_ids = []
-    for i, movie in enumerate(movies, 1):
-        text = get_movie_text_representation(movie)
-        movie_texts.append(text)
-        movie_ids.append(movie.id)
-
-    print("Создание эмбеддингов")
-    embeddings = model.encode(
-        movie_texts, convert_to_numpy=True, show_progress_bar=True
-    )
-
-    print("Создание индекса FAISS")
-    index = faiss.IndexFlatL2(embeddings.shape[1])
-    index.add(embeddings)
-
-    faiss.write_index(index, index_path)
-    np.save(ids_path, np.array(movie_ids))
-
-    print(f"Индекс успешно создан и сохранен. Содержит {index.ntotal} фильмов")
-    return index
 
 
 def print_movie_info(movie, rank, score):

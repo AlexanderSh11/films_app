@@ -1,11 +1,12 @@
-from app.models import Movie, Favorite, MovieRating
-from django.contrib.auth.models import User
-from content_based import MovieRecommender as ContentBasedRecommender
-from collaborative_filtering import MovieRecommender as CollaborativeRecommender
-
 import os
+
 import django
+from django.contrib.auth.models import User
 from django.core.cache import cache
+
+from app.models import Favorite, Movie, MovieRating
+from collaborative_filtering import MovieRecommender as CollaborativeRecommender
+from content_based import MovieRecommender as ContentBasedRecommender
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myapp.settings")
 django.setup()
@@ -48,17 +49,14 @@ class HybridRecommender:
 
         # Коллаборативные рекомендации
         cf_movies_with_scores = []
-        if cf_weight > 0 and self.is_trained:
-            if user_id in self.collaborative.user_to_index:
-                pred = self.collaborative.predict_user_based_k_fract_mean(top=100)
-                if not isinstance(pred, bool):
-                    cf_movies = self.collaborative.recommend_movies(
-                        user_id, pred, n=n * 3
-                    )
-                    # Присваиваем веса на основе позиции
-                    for i, movie in enumerate(cf_movies):
-                        score = 1.0 - (i / (n * 3)) * 0.5  # от 1.0 до 0.5
-                        cf_movies_with_scores.append((movie, score))
+        if (cf_weight > 0) and (self.is_trained) and (user_id in self.collaborative.user_to_index):
+            pred = self.collaborative.predict_user_based_k_fract_mean(top=100)
+            if not isinstance(pred, bool):
+                cf_movies = self.collaborative.recommend_movies(user_id, pred, n=n * 3)
+                # Присваиваем веса на основе позиции
+                for i, movie in enumerate(cf_movies):
+                    score = 1.0 - (i / (n * 3)) * 0.5  # от 1.0 до 0.5
+                    cf_movies_with_scores.append((movie, score))
 
         # Контентные рекомендации
         cb_movies_with_scores = []

@@ -1,9 +1,9 @@
 from django.contrib import admin
-from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import User
 from django.utils.html import format_html
 
-from app.models import Genre, Director, Country, Movie, Favorite, MovieRating
+from app.models import Country, Director, Favorite, Genre, Movie, MovieRating
 
 
 class CustomUserAdmin(UserAdmin):
